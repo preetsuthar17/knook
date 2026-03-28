@@ -11,8 +11,12 @@ final class WellnessPanelController {
         dismissTask?.cancel()
 
         let panel = panel ?? makePanel()
-        let frame = activeScreen.visibleFrame
-        panel.setFrameOrigin(NSPoint(x: frame.maxX - 340, y: frame.maxY - 410))
+        let screen = activeScreen.visibleFrame
+        let margin: CGFloat = 20
+        panel.setFrameOrigin(NSPoint(
+            x: screen.maxX - panel.frame.width - margin,
+            y: screen.maxY - panel.frame.height - margin
+        ))
         panel.contentView = NSHostingView(rootView: WellnessPanelView(event: event))
         panel.orderFrontRegardless()
         self.panel = panel

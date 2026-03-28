@@ -12,8 +12,12 @@ final class ReminderPanelController {
 
     func show(nextBreakDate: Date) {
         let panel = panel ?? makePanel()
-        let frame = activeScreen.visibleFrame
-        panel.setFrameOrigin(NSPoint(x: frame.maxX - 360, y: frame.maxY - 220))
+        let screen = activeScreen.visibleFrame
+        let margin: CGFloat = 20
+        panel.setFrameOrigin(NSPoint(
+            x: screen.maxX - panel.frame.width - margin,
+            y: screen.maxY - panel.frame.height - margin
+        ))
         panel.contentView = NSHostingView(rootView: ReminderPanelView(nextBreakDate: nextBreakDate, model: model))
         panel.orderFrontRegardless()
         self.panel = panel

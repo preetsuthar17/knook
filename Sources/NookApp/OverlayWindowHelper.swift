@@ -33,7 +33,7 @@ enum OverlayWindowHelper {
         fadeDuration: TimeInterval = 0.5,
         timingFunction: CAMediaTimingFunctionName = .easeOut
     ) {
-        let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let screenFrame = activeScreen.frame
         window.setFrame(screenFrame, display: true)
 
         let blurView = NSVisualEffectView(frame: screenFrame)

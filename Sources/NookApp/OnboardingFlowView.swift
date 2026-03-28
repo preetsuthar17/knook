@@ -89,7 +89,8 @@ struct OnboardingFlowView: View {
             pauseIcon(size: 64, cornerRadius: 16, barWidth: 7, barHeight: 26, barSpacing: 8)
 
             Text("Find your pause.")
-                .font(.system(size: 48, weight: .semibold))
+                .font(.largeTitle)
+                .fontWeight(.semibold)
                 .tracking(-1)
                 .foregroundStyle(.white)
         }
@@ -104,7 +105,7 @@ struct OnboardingFlowView: View {
                 Spacer()
                 Button(action: handleFinishSetup) {
                     Text("Finish setup")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.headline)
                         .foregroundStyle(.black)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 12)
@@ -145,14 +146,16 @@ struct OnboardingFlowView: View {
                 pauseIcon(size: 44, cornerRadius: 10, barWidth: 6, barHeight: 20, barSpacing: 6)
 
                 Text("Work/break duration setup")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.title2)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.white)
             }
 
             HStack(alignment: .top, spacing: 40) {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Work mode duration")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.callout)
+                        .fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.8))
 
                     LazyVGrid(columns: [
@@ -174,7 +177,8 @@ struct OnboardingFlowView: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Break duration")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.callout)
+                        .fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.8))
 
                     LazyVGrid(columns: [
@@ -220,7 +224,8 @@ struct OnboardingFlowView: View {
                 }
             } label: {
                 Text("Back")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                     .foregroundStyle(.white.opacity(0.8))
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
@@ -236,7 +241,8 @@ struct OnboardingFlowView: View {
     private func chip(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 17, weight: .medium))
+                .font(.body)
+                .fontWeight(.medium)
                 .monospacedDigit()
                 .foregroundStyle(isSelected ? .black : .white.opacity(0.85))
                 .frame(maxWidth: .infinity)
@@ -261,7 +267,8 @@ struct OnboardingFlowView: View {
             pauseIcon(size: 64, cornerRadius: 16, barWidth: 7, barHeight: 26, barSpacing: 8)
 
             Text("You're all set!")
-                .font(.system(size: 48, weight: .semibold))
+                .font(.largeTitle)
+                .fontWeight(.semibold)
                 .tracking(-1)
                 .foregroundStyle(.white)
         }
@@ -362,28 +369,3 @@ private struct GlassChipModifier: ViewModifier {
     }
 }
 
-private struct ScaleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(duration: 0.2, bounce: 0), value: configuration.isPressed)
-    }
-}
-
-private struct PointerCursorModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-}
-
-extension View {
-    func pointerCursor() -> some View {
-        modifier(PointerCursorModifier())
-    }
-}
