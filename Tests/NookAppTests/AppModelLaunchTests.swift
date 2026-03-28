@@ -75,40 +75,7 @@ final class AppModelLaunchTests: XCTestCase {
         XCTAssertEqual(reloadedSettings.onboardingState, originalSettings.onboardingState)
     }
 
-    func testSaveStarterSetupPersistsSettingsButKeepsPresentationOpenUntilFinished() throws {
-        let store = try makeStore(with: .default)
-        let model = AppModel(
-            settingsStore: store,
-            launchConfiguration: AppLaunchConfiguration(forceOnboarding: false),
-            startsTimer: false,
-            observesSystemEvents: false
-        )
-        let draft = StarterSetupDraft(
-            preset: .custom,
-            workInterval: 30 * 60,
-            microBreakDuration: 25,
-            launchAtLogin: false,
-            postureEnabled: false,
-            blinkEnabled: true
-        )
-
-        model.openStarterSetup()
-
-        XCTAssertTrue(model.saveStarterSetup(draft: draft))
-        XCTAssertEqual(model.launchPhase, .onboarding)
-        XCTAssertEqual(model.menuBarMode, .setup)
-        XCTAssertTrue(model.onboardingState.hasCompletedStarterSetup)
-        XCTAssertNotNil(model.starterSetupViewModel)
-
-        let reloadedSettings = try store.load()
-        XCTAssertEqual(reloadedSettings.breakSettings.workInterval, draft.workInterval)
-        XCTAssertEqual(reloadedSettings.breakSettings.microBreakDuration, draft.microBreakDuration)
-        XCTAssertEqual(reloadedSettings.scheduleSettings.launchAtLogin, draft.launchAtLogin)
-        XCTAssertEqual(reloadedSettings.wellnessSettings.posture.isEnabled, draft.postureEnabled)
-        XCTAssertEqual(reloadedSettings.wellnessSettings.blink.isEnabled, draft.blinkEnabled)
-    }
-
-    func testFinishStarterSetupPresentationTransitionsAppToReady() throws {
+    func testFinishOnboardingFlowPersistsSelectedDurationsAndTransitionsAppToReady() throws {
         let store = try makeStore(with: .default)
         let model = AppModel(
             settingsStore: store,
@@ -117,16 +84,37 @@ final class AppModelLaunchTests: XCTestCase {
             observesSystemEvents: false
         )
 
-        model.openStarterSetup()
-        XCTAssertTrue(model.saveStarterSetup(draft: .recommended))
-
-        model.finishStarterSetupPresentation(now: Date(timeIntervalSinceReferenceDate: 42))
+        model.finishOnboardingFlow(workInterval: 30 * 60, breakDuration: 25)
 
         XCTAssertEqual(model.launchPhase, .ready)
         XCTAssertEqual(model.menuBarMode, .active)
+        XCTAssertTrue(model.onboardingState.hasCompletedStarterSetup)
+
+        let reloadedSettings = try store.load()
+        XCTAssertEqual(reloadedSettings.breakSettings.workInterval, 30 * 60)
+        XCTAssertEqual(reloadedSettings.breakSettings.microBreakDuration, 25)
     }
 
-    func testHandleAppDidFinishLaunchingCreatesStarterSetupViewModelForFirstRun() throws {
+    func testDismissStarterSetupWithDefaultsTransitionsAppToReady() throws {
+        let store = try makeStore(with: .default)
+        let model = AppModel(
+            settingsStore: store,
+            launchConfiguration: AppLaunchConfiguration(forceOnboarding: false),
+            startsTimer: false,
+            observesSystemEvents: false
+        )
+
+        model.dismissStarterSetupWithDefaults()
+
+        XCTAssertEqual(model.launchPhase, .ready)
+        XCTAssertEqual(model.menuBarMode, .active)
+
+        let reloadedSettings = try store.load()
+        XCTAssertEqual(reloadedSettings.breakSettings.workInterval, BreakSettings.default.workInterval)
+        XCTAssertEqual(reloadedSettings.breakSettings.microBreakDuration, BreakSettings.default.microBreakDuration)
+    }
+
+    func testHandleAppDidFinishLaunchingPreservesOnboardingStateForFirstRun() throws {
         let store = try makeStore(with: .default)
         let model = AppModel(
             settingsStore: store,
@@ -139,7 +127,7 @@ final class AppModelLaunchTests: XCTestCase {
 
         XCTAssertEqual(model.launchPhase, .onboarding)
         XCTAssertEqual(model.menuBarMode, .setup)
-        XCTAssertNotNil(model.starterSetupViewModel)
+        XCTAssertEqual(model.appState.statusText, "Finish setup to start your break rhythm")
     }
 
     func testHandleAppDidFinishLaunchingPausesForFullscreenFocusWhenEnabled() throws {

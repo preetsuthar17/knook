@@ -3,7 +3,6 @@ import NookKit
 import XCTest
 
 final class BreakSchedulerTests: XCTestCase {
-    @MainActor
     private final class MockPauseConditionProvider: PauseConditionProvider, @unchecked Sendable {
         let name: String
         var isPauseActive: Bool
@@ -50,7 +49,9 @@ final class BreakSchedulerTests: XCTestCase {
     }
 
     func testPostponePushesTheNextBreakOut() {
-        let scheduler = BreakScheduler(settings: .default)
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        let scheduler = BreakScheduler(settings: settings)
         let start = Date(timeIntervalSinceReferenceDate: 1000)
 
         _ = scheduler.advance(to: start, idleSeconds: 0)
@@ -76,6 +77,7 @@ final class BreakSchedulerTests: XCTestCase {
     func testSchedulerResetsAfterUserIsIdle() {
         var settings = AppSettings.default
         settings.breakSettings.workInterval = 60
+        settings.breakSettings.reminderLeadTime = 0
         settings.scheduleSettings.idleResetThreshold = 120
         let scheduler = BreakScheduler(settings: settings)
         let start = Date(timeIntervalSinceReferenceDate: 1000)
@@ -84,7 +86,8 @@ final class BreakSchedulerTests: XCTestCase {
         let snapshot = scheduler.advance(to: start.addingTimeInterval(30), idleSeconds: 180)
 
         XCTAssertEqual(snapshot.state.nextBreakDate, start.addingTimeInterval(90))
-        XCTAssertTrue(snapshot.state.statusText.contains("reset"))
+        XCTAssertNil(snapshot.state.reminder)
+        XCTAssertNil(snapshot.state.activeBreak)
     }
 
     func testOfficeHoursBlockBreaksOutsideSchedule() {

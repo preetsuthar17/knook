@@ -20,7 +20,7 @@ final class NookApplicationDelegate: NSObject, NSApplicationDelegate {
             NSApplication.shared.applicationIconImage = iconImage
     }
 
-    static func shouldApplyRuntimeIcon(bundleURL: URL) -> Bool {
+    nonisolated static func shouldApplyRuntimeIcon(bundleURL: URL) -> Bool {
         bundleURL.pathExtension != "app"
     }
 }
