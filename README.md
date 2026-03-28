@@ -71,19 +71,19 @@ swift build
 Run the app:
 
 ```bash
-swift run Nook
+swift run
 ```
 
-Force starter setup during local development:
+For the full local development workflow, including `swift run Nook`, filtered test commands, and launch-time overrides such as `NOOK_WORK`, `NOOK_BREAK`, and `NOOK_FORCE_ONBOARDING`, see [docs/local-development.md](docs/local-development.md).
 
-```bash
-NOOK_FORCE_ONBOARDING=1 swift run Nook
-```
-
-Run tests:
+Quick examples:
 
 ```bash
 swift test
+```
+
+```bash
+NOOK_FORCE_ONBOARDING=1 swift run
 ```
 
 `swift test` currently expects a full Xcode installation in this repository's setup.
@@ -101,7 +101,7 @@ swift test
 - `Sources/NookApp/`: macOS app shell, menu bar UI, windows, and app coordination
 - `Sources/NookKit/`: scheduler, models, persistence, and platform integration
 - `Tests/`: scheduler, persistence, and app test coverage
-- `docs/`: release and supporting project docs
+- `docs/`: release and supporting project docs, including the local development guide
 - `packaging/`: macOS packaging assets and helper scripts
 
 ## Contributing
