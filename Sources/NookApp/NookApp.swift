@@ -28,36 +28,12 @@ struct NookApp: App {
 
     @ViewBuilder
     private var menuBarLabel: some View {
-        if let countdownText = urgentCountdownText {
+        if let countdownText = model.appState.countdownText, model.launchPhase == .ready {
             Text(countdownText)
                 .monospacedDigit()
         } else {
             MenuBarIcon()
         }
-    }
-
-    private var urgentCountdownText: String? {
-        guard model.launchPhase == .ready else { return nil }
-
-        if let activeBreak = model.appState.activeBreak {
-            let remaining = max(activeBreak.scheduledEnd.timeIntervalSince(model.appState.now), 0)
-            if remaining <= 60 {
-                return "\(Int(remaining))s"
-            }
-            return nil
-        }
-
-        if let nextBreakDate = model.appState.nextBreakDate {
-            let remaining = max(nextBreakDate.timeIntervalSince(model.appState.now), 0)
-            if remaining <= 10 {
-                return "Break in \(Int(remaining))s"
-            } else if remaining <= 60 {
-                return "\(Int(remaining))s"
-            }
-            return nil
-        }
-
-        return nil
     }
 }
 

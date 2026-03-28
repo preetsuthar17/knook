@@ -6,9 +6,8 @@ struct BreakOverlayView: View {
     let session: BreakSession
     @State private var contentVisible = false
 
-    private var remainingSeconds: Int {
-        guard let activeBreak = model.appState.activeBreak else { return 0 }
-        return Int(max(activeBreak.scheduledEnd.timeIntervalSince(model.appState.now), 0))
+    private var remainingText: String {
+        model.appState.countdownText ?? "00:00"
     }
 
     var body: some View {
@@ -27,7 +26,7 @@ struct BreakOverlayView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: 600)
 
-                Text("Break ends in \(remainingSeconds)s")
+                Text("Break ends in \(remainingText)")
                     .font(.system(size: 17, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.6))

@@ -2,6 +2,7 @@ import AppKit
 @preconcurrency import Combine
 import Foundation
 import NookKit
+import OSLog
 import SwiftUI
 import UserNotifications
 
@@ -19,33 +20,41 @@ final class AppModel: ObservableObject {
     private let wellnessReminderEngine: WellnessReminderEngine
     private let contextualEducationEngine: ContextualEducationEngine
     private let settingsStore: SettingsStore
-    private let activityMonitor: ActivityMonitor
+    private let activityMonitor: any ActivityMonitoring
     let launchAtLoginController: LaunchAtLoginController
     private let workspaceContextProvider: any WorkspaceContextProviding
     private let fullscreenPauseProvider: FullscreenPauseConditionProvider
+    private let injectedWindowCoordinator: (any WindowCoordinator)?
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Nook", category: "Timer")
 
     private var timerCancellable: AnyCancellable?
     private var wakeObserver: NSObjectProtocol?
     private var hasHandledInitialAppLaunch = false
+    private var presentedBreakSessionID: UUID?
+    private var presentedBreakReminderDate: Date?
 
     private lazy var onboardingFlowWindowController = OnboardingFlowWindowController()
     private lazy var breakOverlayController = BreakOverlayWindowController(model: self)
     private lazy var breakReminderController = ReminderPanelController(model: self)
     private lazy var wellnessPanelController = WellnessPanelController()
-    private lazy var windowCoordinator = AppWindowCoordinator(
+    private lazy var defaultWindowCoordinator = AppWindowCoordinator(
         model: self,
         onboardingFlowController: onboardingFlowWindowController,
         breakOverlayController: breakOverlayController,
         breakReminderController: breakReminderController,
         wellnessReminderController: wellnessPanelController
     )
+    private var windowCoordinator: any WindowCoordinator {
+        injectedWindowCoordinator ?? defaultWindowCoordinator
+    }
 
     init(
         settingsStore: SettingsStore = SettingsStore(),
-        activityMonitor: ActivityMonitor = ActivityMonitor(),
+        activityMonitor: any ActivityMonitoring = ActivityMonitor(),
         scheduler: BreakScheduler? = nil,
         launchAtLoginController: LaunchAtLoginController = LaunchAtLoginController(),
         workspaceContextProvider: any WorkspaceContextProviding = WorkspaceContextProvider(),
+        windowCoordinator: (any WindowCoordinator)? = nil,
         launchConfiguration: AppLaunchConfiguration = .current,
         startsTimer: Bool = true,
         observesSystemEvents: Bool = true
@@ -74,6 +83,7 @@ final class AppModel: ObservableObject {
         self.launchAtLoginController = launchAtLoginController
         self.workspaceContextProvider = workspaceContextProvider
         self.fullscreenPauseProvider = fullscreenPauseProvider
+        self.injectedWindowCoordinator = windowCoordinator
 
         scheduler.setPauseProviders(Self.makePauseProviders(
             settings: loadedSettings,
@@ -120,9 +130,10 @@ final class AppModel: ObservableObject {
             return
         }
 
-        let snapshot = scheduler.advance(to: now, idleSeconds: activityMonitor.idleSeconds)
-        apply(snapshot: snapshot, now: now)
-        processWellnessReminders(now: now)
+        let idleSeconds = activityMonitor.idleSeconds
+        let snapshot = scheduler.advance(to: now, idleSeconds: idleSeconds)
+        apply(snapshot: snapshot, now: now, idleSeconds: idleSeconds)
+        processWellnessReminders(now: now, idleSeconds: idleSeconds)
     }
 
     func finishOnboardingFlow(workInterval: TimeInterval, breakDuration: TimeInterval) {
@@ -171,21 +182,21 @@ final class AppModel: ObservableObject {
         }
         let now = Date()
         let snapshot = scheduler.startBreakNow(at: now)
-        apply(snapshot: snapshot, now: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
     func postpone(minutes: Int) {
         guard launchPhase == .ready else { return }
         let now = Date()
         let snapshot = scheduler.postpone(minutes: minutes, now: now)
-        apply(snapshot: snapshot, now: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
     func skipCurrentBreak() {
         guard launchPhase == .ready else { return }
         let now = Date()
         let snapshot = scheduler.skipCurrentBreak(at: now)
-        apply(snapshot: snapshot, now: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
     func pauseOrResume() {
@@ -197,14 +208,14 @@ final class AppModel: ObservableObject {
         } else {
             snapshot = scheduler.pause(reason: "Paused manually", now: now)
         }
-        apply(snapshot: snapshot, now: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
     func endBreakEarly() {
         guard launchPhase == .ready else { return }
         let now = Date()
         let snapshot = scheduler.endBreakEarly(at: now)
-        apply(snapshot: snapshot, now: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
     func saveSettings() {
@@ -219,8 +230,10 @@ final class AppModel: ObservableObject {
             contextualEducationEngine.updateState(settings.contextualEducationState)
             configurePauseProviders()
             if launchPhase == .ready {
-                appState = scheduler.updateSettings(settings, now: Date()).state
-                wellnessReminderEngine.reset(at: Date())
+                let now = Date()
+                let snapshot = scheduler.updateSettings(settings, now: now)
+                apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
+                wellnessReminderEngine.reset(at: now)
             }
             applySettingsSideEffects()
             settingsError = nil
@@ -230,7 +243,7 @@ final class AppModel: ObservableObject {
     }
 
     func dismissBreakWindow() {
-        breakOverlayController.hide()
+        windowCoordinator.hideBreakOverlay()
     }
 
     func dismissStarterSetupWithDefaults() {
@@ -240,19 +253,15 @@ final class AppModel: ObservableObject {
         )
     }
 
-    private func apply(snapshot: BreakScheduler.Snapshot, now: Date) {
+    private func apply(snapshot: BreakScheduler.Snapshot, now: Date, idleSeconds: TimeInterval) {
         appState = snapshot.state
-
-        if snapshot.state.isPaused {
-            breakReminderController.hide()
-        }
+        logTimerState(snapshot: snapshot, now: now, idleSeconds: idleSeconds)
+        reconcileTimerWindows()
 
         if snapshot.reminderJustActivated, let nextBreakDate = snapshot.state.nextBreakDate {
-            _ = nextBreakDate
-            windowCoordinator.show(.breakReminder)
             scheduleNotification(
                 title: "Break almost time",
-                body: "Take a short reset in about \(Int(nextBreakDate.timeIntervalSince(now) / 60)) minute(s)."
+                body: "Take a short reset in \(nextBreakDate.timeIntervalSince(now).countdownString)."
             )
             _ = maybeShowContextualHint(.firstBreak, now: now)
         }
@@ -260,13 +269,7 @@ final class AppModel: ObservableObject {
         if snapshot.breakJustStarted, let breakSession = snapshot.state.activeBreak {
             playSound(for: settings.breakSettings.selectedSound)
             pendingWellnessEvent = nil
-            windowCoordinator.show(.breakOverlay(breakSession))
             scheduleNotification(title: breakSession.kind.title, body: breakSession.message)
-        }
-
-        if snapshot.breakJustEnded {
-            breakOverlayController.hide()
-            breakReminderController.hide()
         }
     }
 
@@ -337,12 +340,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func processWellnessReminders(now: Date) {
+    private func processWellnessReminders(now: Date, idleSeconds: TimeInterval) {
         let context = WellnessContext(
             isOnboardingComplete: onboardingState.hasCompletedStarterSetup,
             isPaused: appState.isPaused,
             activeBreak: appState.activeBreak,
-            idleSeconds: activityMonitor.idleSeconds,
+            idleSeconds: idleSeconds,
             isWithinOfficeHours: settings.scheduleSettings.isWithinOfficeHours(now),
             hasPendingBreakReminder: appState.reminder != nil,
             now: now
@@ -389,6 +392,59 @@ final class AppModel: ObservableObject {
         settings.contextualEducationState = contextualEducationEngine.state
         persistSettingsSnapshot()
         return true
+    }
+
+    private func reconcileTimerWindows() {
+        if let activeBreak = appState.activeBreak {
+            if !windowCoordinator.isBreakOverlayVisible || presentedBreakSessionID != activeBreak.id {
+                logger.debug("Showing break overlay session=\(activeBreak.id.uuidString, privacy: .public)")
+                windowCoordinator.showBreakOverlay(session: activeBreak)
+                presentedBreakSessionID = activeBreak.id
+            }
+
+            if windowCoordinator.isBreakReminderVisible {
+                logger.debug("Hiding break reminder because break is active")
+                windowCoordinator.hideBreakReminder()
+                presentedBreakReminderDate = nil
+            }
+            return
+        }
+
+        if windowCoordinator.isBreakOverlayVisible {
+            logger.debug("Hiding break overlay because there is no active break")
+            windowCoordinator.hideBreakOverlay()
+        }
+        presentedBreakSessionID = nil
+
+        guard !appState.isPaused,
+              appState.reminder != nil,
+              let nextBreakDate = appState.nextBreakDate
+        else {
+            if windowCoordinator.isBreakReminderVisible {
+                logger.debug("Hiding break reminder because reminder state is inactive")
+                windowCoordinator.hideBreakReminder()
+            }
+            presentedBreakReminderDate = nil
+            return
+        }
+
+        if !windowCoordinator.isBreakReminderVisible || presentedBreakReminderDate != nextBreakDate {
+            logger.debug("Showing break reminder for nextBreakDate=\(nextBreakDate.formatted(date: .omitted, time: .standard), privacy: .public)")
+            windowCoordinator.showBreakReminder(nextBreakDate: nextBreakDate)
+            presentedBreakReminderDate = nextBreakDate
+        }
+    }
+
+    private func logTimerState(snapshot: BreakScheduler.Snapshot, now: Date, idleSeconds: TimeInterval) {
+        let nextBreakDescription = snapshot.state.nextBreakDate?.formatted(date: .omitted, time: .standard) ?? "nil"
+        let activeBreakDescription = snapshot.state.activeBreak.map {
+            "\($0.kind.rawValue):\($0.scheduledEnd.formatted(date: .omitted, time: .standard))"
+        } ?? "nil"
+        let reminderVisible = self.windowCoordinator.isBreakReminderVisible
+        let overlayVisible = self.windowCoordinator.isBreakOverlayVisible
+        logger.debug(
+            "tick now=\(now.formatted(date: .omitted, time: .standard), privacy: .public) nextBreak=\(nextBreakDescription, privacy: .public) activeBreak=\(activeBreakDescription, privacy: .public) paused=\(snapshot.state.isPaused, privacy: .public) idleSeconds=\(idleSeconds, privacy: .public) reminderVisible=\(reminderVisible, privacy: .public) overlayVisible=\(overlayVisible, privacy: .public)"
+        )
     }
 
     private func persistSettingsSnapshot() {

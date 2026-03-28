@@ -103,6 +103,37 @@ final class AppWindowCoordinator: WindowCoordinator {
         }
     }
 
+    func showBreakReminder(nextBreakDate: Date) {
+        guard !onboardingFlowController.isVisible else { return }
+        contextualHintController.hide()
+        wellnessReminderController.hide()
+        breakReminderController.show(nextBreakDate: nextBreakDate)
+    }
+
+    func hideBreakReminder() {
+        breakReminderController.hide()
+    }
+
+    var isBreakReminderVisible: Bool {
+        breakReminderController.isVisible
+    }
+
+    func showBreakOverlay(session: BreakSession) {
+        guard !onboardingFlowController.isVisible else { return }
+        breakReminderController.hide()
+        wellnessReminderController.hide()
+        contextualHintController.hide()
+        breakOverlayController.show(session: session)
+    }
+
+    func hideBreakOverlay() {
+        breakOverlayController.hide()
+    }
+
+    var isBreakOverlayVisible: Bool {
+        breakOverlayController.isVisible
+    }
+
     private func showOnboardingFlow() {
         hideAllTransientWindows()
         onboardingFlowController.show { [weak self] workInterval, breakDuration in

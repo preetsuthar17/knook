@@ -52,14 +52,14 @@ struct StatusMenuView: View {
                 LabeledContent("Next break", value: nextBreakDate.formatted(date: .omitted, time: .shortened))
                 LabeledContent(
                     "Countdown",
-                    value: max(nextBreakDate.timeIntervalSince(model.appState.now), 0).clockString
+                    value: max(nextBreakDate.timeIntervalSince(model.appState.now), 0).countdownString
                 )
             }
 
-            if let activeBreak = model.appState.activeBreak {
+            if model.appState.activeBreak != nil, let countdownText = model.appState.countdownText {
                 LabeledContent(
                     "Remaining",
-                    value: "\(Int(max(activeBreak.scheduledEnd.timeIntervalSince(model.appState.now), 0)))s"
+                    value: countdownText
                 )
             }
 

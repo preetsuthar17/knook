@@ -552,10 +552,14 @@ public struct AppState: Sendable {
 }
 
 public extension TimeInterval {
-    var clockString: String {
-        let total = max(Int(self.rounded()), 0)
+    var countdownString: String {
+        let total = max(Int(ceil(self)), 0)
         let minutes = total / 60
         let seconds = total % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    var clockString: String {
+        countdownString
     }
 }

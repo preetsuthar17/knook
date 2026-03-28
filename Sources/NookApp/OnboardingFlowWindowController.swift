@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class OnboardingFlowWindowController {
-    private weak var window: NSWindow?
+    private var window: NSWindow?
 
     func show(onFinish: @escaping @MainActor (TimeInterval, TimeInterval) -> Void) {
         let window = window ?? makeWindow()

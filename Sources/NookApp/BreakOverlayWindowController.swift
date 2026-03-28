@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class BreakOverlayWindowController {
-    private weak var window: NSWindow?
+    private var window: NSWindow?
     private let model: AppModel
 
     init(model: AppModel) {
@@ -53,6 +53,10 @@ final class BreakOverlayWindowController {
                 window.orderOut(nil)
             }
         })
+    }
+
+    var isVisible: Bool {
+        window?.isVisible == true
     }
 
     private func makeWindow() -> NSWindow {

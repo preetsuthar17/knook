@@ -120,7 +120,7 @@ public final class BreakScheduler: @unchecked Sendable {
             }
 
             let remaining = breakSession.scheduledEnd.timeIntervalSince(now)
-            statusText = "\(breakSession.kind.title) in progress (\(remaining.clockString) left)"
+            statusText = "\(breakSession.kind.title) in progress (\(remaining.countdownString) left)"
             return snapshot(now: now, reminderJustActivated: false, breakJustStarted: false, breakJustEnded: false)
         }
 
@@ -144,7 +144,7 @@ public final class BreakScheduler: @unchecked Sendable {
             now < nextBreakDate
         if shouldShowReminder {
             reminderForBreakDate = nextBreakDate
-            statusText = "Break coming up in \(nextBreakDate.timeIntervalSince(now).clockString)"
+            statusText = "Break coming up in \(nextBreakDate.timeIntervalSince(now).countdownString)"
             return snapshot(
                 now: now,
                 reminderJustActivated: !reminderWasVisible,
@@ -160,7 +160,7 @@ public final class BreakScheduler: @unchecked Sendable {
             return snapshot(now: now, reminderJustActivated: false, breakJustStarted: true, breakJustEnded: false)
         }
 
-        statusText = "Next break in \(nextBreakDate.timeIntervalSince(now).clockString)"
+        statusText = "Next break in \(nextBreakDate.timeIntervalSince(now).countdownString)"
         return snapshot(now: now, reminderJustActivated: false, breakJustStarted: false, breakJustEnded: false)
     }
 
@@ -302,7 +302,7 @@ public final class BreakScheduler: @unchecked Sendable {
         suppressReminderForCurrentBreak = false
         postponedUntil = nil
         nextBreakDate = now.addingTimeInterval(settings.breakSettings.workInterval)
-        statusText = "Nice work. Next break in \(settings.breakSettings.workInterval.clockString)"
+        statusText = "Nice work. Next break in \(settings.breakSettings.workInterval.countdownString)"
     }
 
     private var nextBreakKind: BreakKind {

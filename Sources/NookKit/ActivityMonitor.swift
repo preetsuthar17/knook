@@ -1,7 +1,11 @@
 import AppKit
 import Foundation
 
-public final class ActivityMonitor {
+public protocol ActivityMonitoring: Sendable {
+    var idleSeconds: TimeInterval { get }
+}
+
+public final class ActivityMonitor: ActivityMonitoring, @unchecked Sendable {
     public init() {}
 
     public var idleSeconds: TimeInterval {

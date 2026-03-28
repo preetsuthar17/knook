@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 final class WellnessPanelController {
-    private weak var panel: NSPanel?
+    private var panel: NSPanel?
     private var dismissTask: Task<Void, Never>?
 
     func show(event: WellnessReminderEvent) {

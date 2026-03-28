@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class ReminderPanelController {
-    private weak var panel: NSPanel?
+    private var panel: NSPanel?
     private weak var model: AppModel?
 
     init(model: AppModel) {
@@ -19,6 +19,10 @@ final class ReminderPanelController {
 
     func hide() {
         panel?.orderOut(nil)
+    }
+
+    var isVisible: Bool {
+        panel?.isVisible == true
     }
 
     private func makePanel() -> NSPanel {

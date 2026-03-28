@@ -26,4 +26,10 @@ public protocol WindowCoordinator: AnyObject {
     func hide(_ route: WindowRoute)
     func hideAllTransientWindows()
     func isVisible(_ route: WindowRoute) -> Bool
+    func showBreakReminder(nextBreakDate: Date)
+    func hideBreakReminder()
+    var isBreakReminderVisible: Bool { get }
+    func showBreakOverlay(session: BreakSession)
+    func hideBreakOverlay()
+    var isBreakOverlayVisible: Bool { get }
 }
