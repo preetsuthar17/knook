@@ -77,7 +77,6 @@ final class BreakSchedulerTests: XCTestCase {
     func testSchedulerResetsAfterUserIsIdle() {
         var settings = AppSettings.default
         settings.breakSettings.workInterval = 60
-        settings.breakSettings.reminderLeadTime = 0
         settings.scheduleSettings.idleResetThreshold = 120
         let scheduler = BreakScheduler(settings: settings)
         let start = Date(timeIntervalSinceReferenceDate: 1000)
@@ -86,7 +85,6 @@ final class BreakSchedulerTests: XCTestCase {
         let snapshot = scheduler.advance(to: start.addingTimeInterval(30), idleSeconds: 180)
 
         XCTAssertEqual(snapshot.state.nextBreakDate, start.addingTimeInterval(90))
-        XCTAssertNil(snapshot.state.reminder)
         XCTAssertNil(snapshot.state.activeBreak)
     }
 
@@ -107,22 +105,19 @@ final class BreakSchedulerTests: XCTestCase {
     }
 
     @MainActor
-    func testSmartPauseSuppressesReminderAndBreakWhileProviderIsActive() {
+    func testSmartPauseSuppressesBreakWhileProviderIsActive() {
         var settings = AppSettings.default
         settings.breakSettings.workInterval = 120
-        settings.breakSettings.reminderLeadTime = 60
         let provider = MockPauseConditionProvider(isPauseActive: true)
         let scheduler = BreakScheduler(settings: settings, pauseProviders: [provider])
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
         _ = scheduler.advance(to: start, idleSeconds: 0)
-        let pausedReminder = scheduler.advance(to: start.addingTimeInterval(80), idleSeconds: 0)
+        let pausedSnapshot = scheduler.advance(to: start.addingTimeInterval(80), idleSeconds: 0)
         let pausedBreak = scheduler.advance(to: start.addingTimeInterval(140), idleSeconds: 0)
 
-        XCTAssertTrue(pausedReminder.state.isPaused)
-        XCTAssertEqual(pausedReminder.state.pauseReason, "Full-Screen Focus")
-        XCTAssertNil(pausedReminder.state.reminder)
-        XCTAssertFalse(pausedReminder.reminderJustActivated)
+        XCTAssertTrue(pausedSnapshot.state.isPaused)
+        XCTAssertEqual(pausedSnapshot.state.pauseReason, "Full-Screen Focus")
         XCTAssertNil(pausedBreak.state.activeBreak)
         XCTAssertFalse(pausedBreak.breakJustStarted)
     }
@@ -148,7 +143,6 @@ final class BreakSchedulerTests: XCTestCase {
     func testSmartPauseResumeRestoresRemainingTimeWithoutImmediateBreak() {
         var settings = AppSettings.default
         settings.breakSettings.workInterval = 120
-        settings.breakSettings.reminderLeadTime = 30
         let provider = MockPauseConditionProvider(isPauseActive: false)
         let scheduler = BreakScheduler(settings: settings, pauseProviders: [provider])
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -172,7 +166,6 @@ final class BreakSchedulerTests: XCTestCase {
     func testSmartPauseOverdueResumeGetsTwoMinuteGracePeriod() {
         var settings = AppSettings.default
         settings.breakSettings.workInterval = 120
-        settings.breakSettings.reminderLeadTime = 60
         let provider = MockPauseConditionProvider(isPauseActive: false)
         let scheduler = BreakScheduler(settings: settings, pauseProviders: [provider])
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -187,9 +180,7 @@ final class BreakSchedulerTests: XCTestCase {
         let breakStarts = scheduler.advance(to: start.addingTimeInterval(320), idleSeconds: 0)
 
         XCTAssertEqual(resumed.state.nextBreakDate, start.addingTimeInterval(320))
-        XCTAssertNil(resumed.state.reminder)
         XCTAssertNil(stillWaiting.state.activeBreak)
-        XCTAssertFalse(stillWaiting.reminderJustActivated)
         XCTAssertTrue(breakStarts.breakJustStarted)
     }
 }

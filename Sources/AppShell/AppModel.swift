@@ -34,13 +34,11 @@ final class AppModel: ObservableObject {
     private lazy var settingsWindowController = SettingsWindowController()
     private lazy var onboardingFlowWindowController = OnboardingFlowWindowController()
     private lazy var breakOverlayController = BreakOverlayWindowController(model: self)
-    private lazy var breakReminderController = ReminderPanelController(model: self)
     private lazy var wellnessPanelController = WellnessPanelController()
     private lazy var defaultWindowCoordinator = AppWindowCoordinator(
         model: self,
         onboardingFlowController: onboardingFlowWindowController,
         breakOverlayController: breakOverlayController,
-        breakReminderController: breakReminderController,
         wellnessReminderController: wellnessPanelController
     )
     private var windowCoordinator: any WindowCoordinator {
@@ -267,14 +265,6 @@ final class AppModel: ObservableObject {
         logTimerState(snapshot: snapshot, now: now, idleSeconds: idleSeconds)
         reconcileTimerWindows()
 
-        if snapshot.reminderJustActivated, let nextBreakDate = snapshot.state.nextBreakDate {
-            scheduleNotification(
-                title: "Break almost time",
-                body: "Take a short reset in \(nextBreakDate.timeIntervalSince(now).countdownString)."
-            )
-            _ = maybeShowContextualHint(.firstBreak, now: now)
-        }
-
         if snapshot.breakJustStarted, let breakSession = snapshot.state.activeBreak {
             playSound(for: settings.breakSettings.selectedSound)
             pendingWellnessEvent = nil
@@ -356,12 +346,11 @@ final class AppModel: ObservableObject {
             activeBreak: appState.activeBreak,
             idleSeconds: idleSeconds,
             isWithinOfficeHours: settings.scheduleSettings.isWithinOfficeHours(now),
-            hasPendingBreakReminder: appState.reminder != nil,
             now: now
         )
 
         guard let event = wellnessReminderEngine.advance(context: context).first else {
-            if appState.reminder != nil || appState.activeBreak != nil {
+            if appState.activeBreak != nil {
                 if let existingEvent = pendingWellnessEvent {
                     windowCoordinator.hide(.wellnessReminder(existingEvent.kind))
                 }
@@ -409,33 +398,12 @@ final class AppModel: ObservableObject {
                 logger.debug("Showing break overlay session=\(activeBreak.id.uuidString, privacy: .public)")
                 windowCoordinator.showBreakOverlay(session: activeBreak)
             }
-
-            if windowCoordinator.isBreakReminderVisible {
-                logger.debug("Hiding break reminder because break is active")
-                windowCoordinator.hideBreakReminder()
-            }
             return
         }
 
         if windowCoordinator.isBreakOverlayVisible {
             logger.debug("Hiding break overlay because there is no active break")
             windowCoordinator.hideBreakOverlay()
-        }
-
-        guard !appState.isPaused,
-              appState.reminder != nil,
-              let nextBreakDate = appState.nextBreakDate
-        else {
-            if windowCoordinator.isBreakReminderVisible {
-                logger.debug("Hiding break reminder because reminder state is inactive")
-                windowCoordinator.hideBreakReminder()
-            }
-            return
-        }
-
-        if !windowCoordinator.isBreakReminderVisible || windowCoordinator.currentBreakReminderDate != nextBreakDate {
-            logger.debug("Showing break reminder for nextBreakDate=\(nextBreakDate.formatted(date: .omitted, time: .standard), privacy: .public)")
-            windowCoordinator.showBreakReminder(nextBreakDate: nextBreakDate)
         }
     }
 
@@ -444,10 +412,9 @@ final class AppModel: ObservableObject {
         let activeBreakDescription = snapshot.state.activeBreak.map {
             "\($0.kind.rawValue):\($0.scheduledEnd.formatted(date: .omitted, time: .standard))"
         } ?? "nil"
-        let reminderVisible = self.windowCoordinator.isBreakReminderVisible
         let overlayVisible = self.windowCoordinator.isBreakOverlayVisible
         logger.debug(
-            "tick now=\(now.formatted(date: .omitted, time: .standard), privacy: .public) nextBreak=\(nextBreakDescription, privacy: .public) activeBreak=\(activeBreakDescription, privacy: .public) paused=\(snapshot.state.isPaused, privacy: .public) idleSeconds=\(idleSeconds, privacy: .public) reminderVisible=\(reminderVisible, privacy: .public) overlayVisible=\(overlayVisible, privacy: .public)"
+            "tick now=\(now.formatted(date: .omitted, time: .standard), privacy: .public) nextBreak=\(nextBreakDescription, privacy: .public) activeBreak=\(activeBreakDescription, privacy: .public) paused=\(snapshot.state.isPaused, privacy: .public) idleSeconds=\(idleSeconds, privacy: .public) overlayVisible=\(overlayVisible, privacy: .public)"
         )
     }
 
@@ -468,7 +435,6 @@ final class AppModel: ObservableObject {
             now: now,
             nextBreakDate: nil,
             activeBreak: nil,
-            reminder: nil,
             isPaused: false,
             pauseReason: nil,
             statusText: "Finish setup to start your break rhythm"

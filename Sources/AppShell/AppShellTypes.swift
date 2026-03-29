@@ -14,7 +14,6 @@ public enum MenuBarMode: String, Sendable {
 public enum WindowRoute: Hashable, Sendable {
     case onboardingFlow
     case settings
-    case breakReminder
     case wellnessReminder(WellnessReminderKind)
     case contextualHint(HintKind)
     case breakOverlay(BreakSession)
@@ -26,10 +25,6 @@ public protocol WindowCoordinator: AnyObject {
     func hide(_ route: WindowRoute)
     func hideAllTransientWindows()
     func isVisible(_ route: WindowRoute) -> Bool
-    func showBreakReminder(nextBreakDate: Date)
-    func hideBreakReminder()
-    var isBreakReminderVisible: Bool { get }
-    var currentBreakReminderDate: Date? { get }
     func showBreakOverlay(session: BreakSession)
     func hideBreakOverlay()
     var isBreakOverlayVisible: Bool { get }

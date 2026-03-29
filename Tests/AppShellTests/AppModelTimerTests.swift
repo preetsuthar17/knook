@@ -11,23 +11,16 @@ final class AppModelTimerTests: XCTestCase {
 
     private final class MockWindowCoordinator: WindowCoordinator {
         var onboardingVisible = false
-        var showBreakReminderCalls = 0
-        var hideBreakReminderCalls = 0
         var showBreakOverlayCalls = 0
         var hideBreakOverlayCalls = 0
-        var isBreakReminderVisible = false
         var isBreakOverlayVisible = false
-        var currentBreakReminderDate: Date?
         var currentBreakOverlaySessionID: UUID?
-        var shownBreakReminderDates: [Date] = []
         var shownBreakOverlaySessions: [BreakSession] = []
 
         func show(_ route: WindowRoute) {
             switch route {
             case .onboardingFlow:
                 onboardingVisible = true
-            case .breakReminder:
-                isBreakReminderVisible = true
             case .breakOverlay:
                 isBreakOverlayVisible = true
             default:
@@ -39,9 +32,6 @@ final class AppModelTimerTests: XCTestCase {
             switch route {
             case .onboardingFlow:
                 onboardingVisible = false
-            case .breakReminder:
-                isBreakReminderVisible = false
-                currentBreakReminderDate = nil
             case .breakOverlay:
                 isBreakOverlayVisible = false
                 currentBreakOverlaySessionID = nil
@@ -51,9 +41,7 @@ final class AppModelTimerTests: XCTestCase {
         }
 
         func hideAllTransientWindows() {
-            isBreakReminderVisible = false
             isBreakOverlayVisible = false
-            currentBreakReminderDate = nil
             currentBreakOverlaySessionID = nil
         }
 
@@ -61,26 +49,11 @@ final class AppModelTimerTests: XCTestCase {
             switch route {
             case .onboardingFlow:
                 onboardingVisible
-            case .breakReminder:
-                isBreakReminderVisible
             case .breakOverlay:
                 isBreakOverlayVisible
             default:
                 false
             }
-        }
-
-        func showBreakReminder(nextBreakDate: Date) {
-            showBreakReminderCalls += 1
-            isBreakReminderVisible = true
-            currentBreakReminderDate = nextBreakDate
-            shownBreakReminderDates.append(nextBreakDate)
-        }
-
-        func hideBreakReminder() {
-            hideBreakReminderCalls += 1
-            isBreakReminderVisible = false
-            currentBreakReminderDate = nil
         }
 
         func showBreakOverlay(session: BreakSession) {
@@ -102,7 +75,6 @@ final class AppModelTimerTests: XCTestCase {
         let model = try makeModel(
             workInterval: 120,
             breakDuration: 20,
-            reminderLeadTime: 0,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -120,7 +92,6 @@ final class AppModelTimerTests: XCTestCase {
         let model = try makeModel(
             workInterval: 60,
             breakDuration: 20,
-            reminderLeadTime: 0,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -140,7 +111,6 @@ final class AppModelTimerTests: XCTestCase {
         let model = try makeModel(
             workInterval: 60,
             breakDuration: 20,
-            reminderLeadTime: 0,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -158,7 +128,6 @@ final class AppModelTimerTests: XCTestCase {
         let model = try makeModel(
             workInterval: 60,
             breakDuration: 20,
-            reminderLeadTime: 0,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -173,24 +142,21 @@ final class AppModelTimerTests: XCTestCase {
         XCTAssertTrue(coordinator.isBreakOverlayVisible)
     }
 
-    func testHiddenReminderPanelIsShownAgainWhileReminderStateIsActive() throws {
+    func testNoBreakOverlayAppearsBeforeWorkIntervalElapses() throws {
         let coordinator = MockWindowCoordinator()
         let model = try makeModel(
-            workInterval: 120,
+            workInterval: 60,
             breakDuration: 20,
-            reminderLeadTime: 60,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
         model.handleAppDidFinishLaunching(now: start)
-        model.tick(now: start.addingTimeInterval(60))
-        coordinator.isBreakReminderVisible = false
+        model.tick(now: start.addingTimeInterval(59))
 
-        model.tick(now: start.addingTimeInterval(61))
-
-        XCTAssertEqual(coordinator.showBreakReminderCalls, 2)
-        XCTAssertTrue(coordinator.isBreakReminderVisible)
+        XCTAssertNil(model.appState.activeBreak)
+        XCTAssertEqual(coordinator.showBreakOverlayCalls, 0)
+        XCTAssertFalse(coordinator.isBreakOverlayVisible)
     }
 
     func testDelayedTickStartsBreakUsingAbsoluteTime() throws {
@@ -198,7 +164,6 @@ final class AppModelTimerTests: XCTestCase {
         let model = try makeModel(
             workInterval: 60,
             breakDuration: 20,
-            reminderLeadTime: 0,
             windowCoordinator: coordinator
         )
         let start = Date(timeIntervalSinceReferenceDate: 1_000)
@@ -214,13 +179,11 @@ final class AppModelTimerTests: XCTestCase {
     private func makeModel(
         workInterval: TimeInterval,
         breakDuration: TimeInterval,
-        reminderLeadTime: TimeInterval,
         windowCoordinator: MockWindowCoordinator
     ) throws -> AppModel {
         var settings = completedSettings()
         settings.breakSettings.workInterval = workInterval
         settings.breakSettings.microBreakDuration = breakDuration
-        settings.breakSettings.reminderLeadTime = reminderLeadTime
         settings.smartPauseSettings.pauseDuringFullscreenFocus = false
         let store = try makeStore(with: settings)
 

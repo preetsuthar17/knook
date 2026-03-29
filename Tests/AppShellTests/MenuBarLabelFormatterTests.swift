@@ -18,7 +18,6 @@ final class MenuBarLabelFormatterTests: XCTestCase {
             now: now,
             nextBreakDate: nil,
             activeBreak: activeBreak,
-            reminder: nil,
             isPaused: false,
             pauseReason: nil,
             statusText: "Short Break in progress (00:20 left)"
@@ -36,7 +35,6 @@ final class MenuBarLabelFormatterTests: XCTestCase {
             now: now,
             nextBreakDate: now.addingTimeInterval(5 * 60),
             activeBreak: nil,
-            reminder: nil,
             isPaused: false,
             pauseReason: nil,
             statusText: "Next break in 05:00"
@@ -48,24 +46,20 @@ final class MenuBarLabelFormatterTests: XCTestCase {
         XCTAssertEqual(content.countdownText, "05:00")
     }
 
-    func testUsesReminderSymbolWhileReminderIsVisible() {
+    func testKeepsWorkCountdownSymbolNearBreakStart() {
         let now = Date(timeIntervalSinceReferenceDate: 1_000)
         let state = AppState(
             now: now,
             nextBreakDate: now.addingTimeInterval(45),
             activeBreak: nil,
-            reminder: ReminderState(
-                dueDate: now,
-                scheduledBreakDate: now.addingTimeInterval(45)
-            ),
             isPaused: false,
             pauseReason: nil,
-            statusText: "Break coming up in 00:45"
+            statusText: "Next break in 00:45"
         )
 
         let content = MenuBarLabelFormatter.content(launchPhase: .ready, state: state)
 
-        XCTAssertEqual(content.symbolName, "bell.badge.fill")
+        XCTAssertEqual(content.symbolName, "hourglass")
         XCTAssertEqual(content.countdownText, "00:45")
     }
 
@@ -75,7 +69,6 @@ final class MenuBarLabelFormatterTests: XCTestCase {
             now: now,
             nextBreakDate: now.addingTimeInterval(5 * 60),
             activeBreak: nil,
-            reminder: nil,
             isPaused: true,
             pauseReason: "Full-Screen Focus",
             statusText: "Paused by Full-Screen Focus"

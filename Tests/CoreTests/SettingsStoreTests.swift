@@ -83,9 +83,11 @@ final class SettingsStoreTests: XCTestCase {
         try legacyData.write(to: fileURL)
 
         let loaded = try store.load()
+        let persistedAfterMigration = try String(contentsOf: fileURL, encoding: .utf8)
 
         XCTAssertEqual(loaded.schemaVersion, AppSettings.currentSchemaVersion)
         XCTAssertFalse(loaded.smartPauseSettings.pauseDuringFullscreenFocus)
+        XCTAssertFalse(persistedAfterMigration.contains("reminderLeadTime"))
     }
 
     func testLoadMigratesFromLegacyFileLocationWhenPrimaryFileIsMissing() throws {

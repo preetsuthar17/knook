@@ -29,8 +29,7 @@ public final class WellnessReminderEngine: @unchecked Sendable {
 
         guard context.activeBreak == nil,
               !context.isPaused,
-              context.isWithinOfficeHours,
-              !context.hasPendingBreakReminder
+              context.isWithinOfficeHours
         else {
             return []
         }

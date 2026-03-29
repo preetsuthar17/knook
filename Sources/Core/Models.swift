@@ -76,7 +76,6 @@ public struct OfficeHoursRule: Codable, Hashable, Sendable, Identifiable {
 public struct BreakSettings: Codable, Hashable, Sendable {
     public var workInterval: TimeInterval
     public var microBreakDuration: TimeInterval
-    public var reminderLeadTime: TimeInterval
     public var longBreakDuration: TimeInterval
     public var longBreakCadence: Int
     public var longBreaksEnabled: Bool
@@ -89,7 +88,6 @@ public struct BreakSettings: Codable, Hashable, Sendable {
     public init(
         workInterval: TimeInterval,
         microBreakDuration: TimeInterval,
-        reminderLeadTime: TimeInterval,
         longBreakDuration: TimeInterval,
         longBreakCadence: Int,
         longBreaksEnabled: Bool,
@@ -101,7 +99,6 @@ public struct BreakSettings: Codable, Hashable, Sendable {
     ) {
         self.workInterval = workInterval
         self.microBreakDuration = microBreakDuration
-        self.reminderLeadTime = reminderLeadTime
         self.longBreakDuration = longBreakDuration
         self.longBreakCadence = longBreakCadence
         self.longBreaksEnabled = longBreaksEnabled
@@ -115,7 +112,6 @@ public struct BreakSettings: Codable, Hashable, Sendable {
     public static let `default` = BreakSettings(
         workInterval: 20 * 60,
         microBreakDuration: 20,
-        reminderLeadTime: 60,
         longBreakDuration: 5 * 60,
         longBreakCadence: 3,
         longBreaksEnabled: true,
@@ -248,7 +244,6 @@ public struct WellnessContext: Sendable {
     public var activeBreak: BreakSession?
     public var idleSeconds: TimeInterval
     public var isWithinOfficeHours: Bool
-    public var hasPendingBreakReminder: Bool
     public var now: Date
 
     public init(
@@ -257,7 +252,6 @@ public struct WellnessContext: Sendable {
         activeBreak: BreakSession?,
         idleSeconds: TimeInterval,
         isWithinOfficeHours: Bool,
-        hasPendingBreakReminder: Bool,
         now: Date
     ) {
         self.isOnboardingComplete = isOnboardingComplete
@@ -265,7 +259,6 @@ public struct WellnessContext: Sendable {
         self.activeBreak = activeBreak
         self.idleSeconds = idleSeconds
         self.isWithinOfficeHours = isWithinOfficeHours
-        self.hasPendingBreakReminder = hasPendingBreakReminder
         self.now = now
     }
 }
@@ -405,7 +398,7 @@ public struct ContextualEducationState: Codable, Hashable, Sendable {
 }
 
 public struct AppSettings: Codable, Hashable, Sendable {
-    public static let currentSchemaVersion = 4
+    public static let currentSchemaVersion = 5
 
     public var schemaVersion: Int
     public var breakSettings: BreakSettings
@@ -490,11 +483,6 @@ public struct AppSettings: Codable, Hashable, Sendable {
     }
 }
 
-public struct ReminderState: Hashable, Sendable {
-    public var dueDate: Date
-    public var scheduledBreakDate: Date
-}
-
 public struct BreakSession: Identifiable, Hashable, Sendable {
     public var id: UUID
     public var kind: BreakKind
@@ -527,7 +515,6 @@ public struct AppState: Sendable {
     public var now: Date
     public var nextBreakDate: Date?
     public var activeBreak: BreakSession?
-    public var reminder: ReminderState?
     public var isPaused: Bool
     public var pauseReason: String?
     public var statusText: String
@@ -536,7 +523,6 @@ public struct AppState: Sendable {
         now: Date,
         nextBreakDate: Date?,
         activeBreak: BreakSession?,
-        reminder: ReminderState?,
         isPaused: Bool,
         pauseReason: String?,
         statusText: String
@@ -544,7 +530,6 @@ public struct AppState: Sendable {
         self.now = now
         self.nextBreakDate = nextBreakDate
         self.activeBreak = activeBreak
-        self.reminder = reminder
         self.isPaused = isPaused
         self.pauseReason = pauseReason
         self.statusText = statusText

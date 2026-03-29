@@ -7,23 +7,19 @@ final class AppWindowCoordinator: WindowCoordinator {
     private weak var model: AppModel?
     private let onboardingFlowController: OnboardingFlowWindowController
     private let breakOverlayController: BreakOverlayWindowController
-    private let breakReminderController: ReminderPanelController
     private let wellnessReminderController: WellnessPanelController
     private let contextualHintController = ContextualHintController()
-    private(set) var currentBreakReminderDate: Date?
     private(set) var currentBreakOverlaySessionID: UUID?
 
     init(
         model: AppModel,
         onboardingFlowController: OnboardingFlowWindowController,
         breakOverlayController: BreakOverlayWindowController,
-        breakReminderController: ReminderPanelController,
         wellnessReminderController: WellnessPanelController
         ) {
         self.model = model
         self.onboardingFlowController = onboardingFlowController
         self.breakOverlayController = breakOverlayController
-        self.breakReminderController = breakReminderController
         self.wellnessReminderController = wellnessReminderController
     }
 
@@ -33,20 +29,12 @@ final class AppWindowCoordinator: WindowCoordinator {
             showOnboardingFlow()
         case .settings:
             break
-        case .breakReminder:
-            guard !onboardingFlowController.isVisible,
-                  let nextBreakDate = model?.appState.nextBreakDate
-            else { return }
-            contextualHintController.hide()
-            wellnessReminderController.hide()
-            breakReminderController.show(nextBreakDate: nextBreakDate)
         case let .wellnessReminder(kind):
             guard !onboardingFlowController.isVisible,
                   model?.appState.activeBreak == nil,
                   let event = model?.pendingWellnessEvent,
                   event.kind == kind
             else { return }
-            breakReminderController.hide()
             contextualHintController.hide()
             wellnessReminderController.show(event: event)
         case let .contextualHint(kind):
@@ -57,7 +45,6 @@ final class AppWindowCoordinator: WindowCoordinator {
             contextualHintController.show(kind: kind)
         case let .breakOverlay(session):
             guard !onboardingFlowController.isVisible else { return }
-            breakReminderController.hide()
             wellnessReminderController.hide()
             contextualHintController.hide()
             breakOverlayController.show(session: session)
@@ -70,8 +57,6 @@ final class AppWindowCoordinator: WindowCoordinator {
             onboardingFlowController.hide()
         case .settings:
             break
-        case .breakReminder:
-            breakReminderController.hide()
         case .wellnessReminder:
             wellnessReminderController.hide()
         case .contextualHint:
@@ -82,11 +67,9 @@ final class AppWindowCoordinator: WindowCoordinator {
     }
 
     func hideAllTransientWindows() {
-        breakReminderController.hide()
         wellnessReminderController.hide()
         contextualHintController.hide()
         breakOverlayController.hide()
-        currentBreakReminderDate = nil
         currentBreakOverlaySessionID = nil
     }
 
@@ -95,8 +78,6 @@ final class AppWindowCoordinator: WindowCoordinator {
         case .onboardingFlow:
             onboardingFlowController.isVisible
         case .settings:
-            false
-        case .breakReminder:
             false
         case .wellnessReminder:
             wellnessReminderController.isVisible
@@ -107,27 +88,8 @@ final class AppWindowCoordinator: WindowCoordinator {
         }
     }
 
-    func showBreakReminder(nextBreakDate: Date) {
-        guard !onboardingFlowController.isVisible else { return }
-        contextualHintController.hide()
-        wellnessReminderController.hide()
-        breakReminderController.show(nextBreakDate: nextBreakDate)
-        currentBreakReminderDate = nextBreakDate
-    }
-
-    func hideBreakReminder() {
-        breakReminderController.hide()
-        currentBreakReminderDate = nil
-    }
-
-    var isBreakReminderVisible: Bool {
-        breakReminderController.isVisible
-    }
-
     func showBreakOverlay(session: BreakSession) {
         guard !onboardingFlowController.isVisible else { return }
-        breakReminderController.hide()
-        currentBreakReminderDate = nil
         wellnessReminderController.hide()
         contextualHintController.hide()
         breakOverlayController.show(session: session)

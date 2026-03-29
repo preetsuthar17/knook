@@ -35,7 +35,7 @@ enum MenuBarLabelFormatter {
 
         if state.nextBreakDate != nil {
             return MenuBarLabelContent(
-                symbolName: state.reminder == nil ? "hourglass" : "bell.badge.fill",
+                symbolName: "hourglass",
                 countdownText: state.countdownText,
                 accessibilityLabel: "Next break countdown"
             )
