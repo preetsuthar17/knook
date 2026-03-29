@@ -12,7 +12,7 @@ knook is a native menu bar app for macOS that helps you take screen breaks witho
 
 > knook is in active development and should be treated as early alpha software. UI details, contributor workflows, and local setup may still change as the app is being hardened.
 
-[Quick Start](#quick-start) · [What knook is](#what-knook-is) · [Why knook exists](#why-knook-exists) · [What It Feels Like](#what-it-feels-like) · [Current Capabilities](#current-capabilities) · [Repository Map](#repository-map) · [Contributing](#contributing) · [Support](#support)
+[Quick Start](#quick-start) · [Install Guide](docs/installation.md) · [What knook is](#what-knook-is) · [Why knook exists](#why-knook-exists) · [What It Feels Like](#what-it-feels-like) · [Current Capabilities](#current-capabilities) · [Repository Map](#repository-map) · [Contributing](#contributing) · [Support](#support)
 
 ## What knook is
 
@@ -95,6 +95,8 @@ swift run
 ```
 
 For the full local development workflow, including `swift run knook`, filtered test commands, and launch-time overrides such as `KNOOK_WORK`, `KNOOK_BREAK`, and `KNOOK_FORCE_ONBOARDING`, see [docs/local-development.md](docs/local-development.md).
+
+For a deeper install guide, including troubleshooting, uninstall, and reset steps, see [docs/installation.md](docs/installation.md).
 
 Quick examples:
 
