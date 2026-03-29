@@ -5,11 +5,16 @@ set -euo pipefail
 script_dir=${0:A:h}
 repo_root=${script_dir:h:h}
 
-source_logo="${repo_root}/nook logo.png"
+source_logo="${repo_root}/knook logo.png"
+legacy_source_logo="${repo_root}/nook logo.png"
 runtime_icon="${repo_root}/Sources/AppShell/Resources/AppIcon.png"
 xcassets_dir="${repo_root}/Sources/AppShell/Resources/Assets.xcassets"
 appiconset_dir="${xcassets_dir}/AppIcon.appiconset"
 bundle_icon="${repo_root}/packaging/macos/AppIcon.icns"
+
+if [[ ! -f "${source_logo}" && -f "${legacy_source_logo}" ]]; then
+  source_logo="${legacy_source_logo}"
+fi
 
 if [[ ! -f "${source_logo}" ]]; then
   echo "Missing source logo at ${source_logo}" >&2
@@ -18,7 +23,7 @@ fi
 
 mkdir -p "${appiconset_dir}"
 
-tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/nook-icons.XXXXXX")
+tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/knook-icons.XXXXXX")
 trap 'rm -rf "${tmp_dir}"' EXIT
 
 padded_base="${tmp_dir}/AppIcon-1024.png"

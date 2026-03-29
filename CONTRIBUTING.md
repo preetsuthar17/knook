@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping build nook.
+Thanks for helping build knook.
 
 ## Local setup
 

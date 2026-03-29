@@ -25,7 +25,7 @@ final class AppModel: ObservableObject {
     private let workspaceContextProvider: any WorkspaceContextProviding
     private let fullscreenPauseProvider: FullscreenPauseConditionProvider
     private let injectedWindowCoordinator: (any WindowCoordinator)?
-    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "nook", category: "Timer")
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "knook", category: "Timer")
 
     private var timerCancellable: AnyCancellable?
     private var wakeObserver: NSObjectProtocol?
@@ -292,7 +292,7 @@ final class AppModel: ObservableObject {
 
     private func bindSystemEvents() {
         wakeObserver = NotificationCenter.default.addObserver(
-            forName: .nookSystemDidWake,
+            forName: .knookSystemDidWake,
             object: nil,
             queue: .main
         ) { [weak self] _ in

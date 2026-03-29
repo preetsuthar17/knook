@@ -13,7 +13,7 @@ enum MenuBarLabelFormatter {
             return MenuBarLabelContent(
                 symbolName: "pause.fill",
                 countdownText: nil,
-                accessibilityLabel: "nook"
+                accessibilityLabel: "knook"
             )
         }
 

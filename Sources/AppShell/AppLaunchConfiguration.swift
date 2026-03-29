@@ -2,9 +2,9 @@ import Foundation
 
 struct AppLaunchConfiguration: Sendable, Equatable {
     let forceOnboarding: Bool
-    /// Override work interval in seconds (e.g. NOOK_WORK=10 for 10s)
+    /// Override work interval in seconds (e.g. KNOOK_WORK=10 for 10s)
     let workIntervalOverride: TimeInterval?
-    /// Override break duration in seconds (e.g. NOOK_BREAK=5 for 5s)
+    /// Override break duration in seconds (e.g. KNOOK_BREAK=5 for 5s)
     let breakDurationOverride: TimeInterval?
 
     init(forceOnboarding: Bool = false, workIntervalOverride: TimeInterval? = nil, breakDurationOverride: TimeInterval? = nil) {
@@ -14,9 +14,15 @@ struct AppLaunchConfiguration: Sendable, Equatable {
     }
 
     init(environment: [String: String]) {
-        self.forceOnboarding = Self.parseBoolean(environment["NOOK_FORCE_ONBOARDING"])
-        self.workIntervalOverride = Self.parseSeconds(environment["NOOK_WORK"])
-        self.breakDurationOverride = Self.parseSeconds(environment["NOOK_BREAK"])
+        self.forceOnboarding = Self.parseBoolean(
+            environment["KNOOK_FORCE_ONBOARDING"] ?? environment["NOOK_FORCE_ONBOARDING"]
+        )
+        self.workIntervalOverride = Self.parseSeconds(
+            environment["KNOOK_WORK"] ?? environment["NOOK_WORK"]
+        )
+        self.breakDurationOverride = Self.parseSeconds(
+            environment["KNOOK_BREAK"] ?? environment["NOOK_BREAK"]
+        )
     }
 
     static let current = AppLaunchConfiguration(environment: ProcessInfo.processInfo.environment)

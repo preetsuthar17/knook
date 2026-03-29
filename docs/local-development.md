@@ -1,6 +1,6 @@
 # Local Development
 
-This guide covers the fastest way to build, run, and test nook locally.
+This guide covers the fastest way to build, run, and test knook locally.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ Launch the app from the repository root:
 swift run
 ```
 
-`swift run nook` is also valid in this package because nook is the executable product.
+`swift run knook` is also valid in this package because knook is the executable product.
 
 ## Test
 
@@ -44,25 +44,26 @@ swift test --filter AppModelLaunchTests
 
 ## Fast Local Iteration
 
-nook supports launch-time environment variable overrides for local testing. These values are read when the app starts, override whatever is currently saved in settings, and do not persist back to disk.
+knook supports launch-time environment variable overrides for local testing. These values are read when the app starts, override whatever is currently saved in settings, and do not persist back to disk.
 
 Available overrides:
 
-- `NOOK_WORK=<seconds>` sets the work interval for the current launch only
-- `NOOK_BREAK=<seconds>` sets the break duration for the current launch only
-- `NOOK_FORCE_ONBOARDING=1` forces the onboarding flow for the current launch only
+- `KNOOK_WORK=<seconds>` sets the work interval for the current launch only
+- `KNOOK_BREAK=<seconds>` sets the break duration for the current launch only
+- `KNOOK_FORCE_ONBOARDING=1` forces the onboarding flow for the current launch only
+- legacy `NOOK_*` variants still work for existing local scripts
 
 Examples:
 
 ```bash
 # 10s work, 5s break
-NOOK_WORK=10 NOOK_BREAK=5 swift run
+KNOOK_WORK=10 KNOOK_BREAK=5 swift run
 
 # 30s work, default break
-NOOK_WORK=30 swift run
+KNOOK_WORK=30 swift run
 
 # Combine with force onboarding
-NOOK_FORCE_ONBOARDING=1 NOOK_WORK=10 NOOK_BREAK=5 swift run
+KNOOK_FORCE_ONBOARDING=1 KNOOK_WORK=10 KNOOK_BREAK=5 swift run
 ```
 
 Values are in seconds. They override whatever is saved in settings without persisting.
@@ -72,7 +73,7 @@ Values are in seconds. They override whatever is saved in settings without persi
 When using the short-duration overrides above, you should see:
 
 - a reminder or break cycle arrive much sooner than your normal saved schedule
-- a shorter break end more quickly when `NOOK_BREAK` is set
-- the onboarding flow appear when `NOOK_FORCE_ONBOARDING=1` is set
+- a shorter break end more quickly when `KNOOK_BREAK` is set
+- the onboarding flow appear when `KNOOK_FORCE_ONBOARDING=1` is set
 
 Forced onboarding is only a launch-time override. It does not overwrite the saved onboarding state until you explicitly complete or dismiss the setup flow.

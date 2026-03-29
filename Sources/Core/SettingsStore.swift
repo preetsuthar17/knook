@@ -2,16 +2,23 @@ import Foundation
 
 public final class SettingsStore {
     public let fileURL: URL
-    public let legacyFileURL: URL?
+    public let legacyFileURLs: [URL]
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     public init(
         fileURL: URL = SettingsStore.defaultFileURL,
-        legacyFileURL: URL? = SettingsStore.legacyDefaultFileURL
+        legacyFileURL: URL? = nil,
+        legacyFileURLs: [URL] = SettingsStore.legacyDefaultFileURLs
     ) {
         self.fileURL = fileURL
-        self.legacyFileURL = legacyFileURL
+        if let legacyFileURL {
+            self.legacyFileURLs = [legacyFileURL]
+        } else {
+            self.legacyFileURLs = legacyFileURLs.filter {
+                $0.standardizedFileURL != fileURL.standardizedFileURL
+            }
+        }
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     }
 
@@ -42,27 +49,38 @@ public final class SettingsStore {
     }
 
     public static var legacyDefaultFileURL: URL {
+        legacyDefaultFileURLs.last ?? defaultFileURL
+    }
+
+    public static var legacyDefaultFileURLs: [URL] {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-        return base
-            .appendingPathComponent("Nook", isDirectory: true)
-            .appendingPathComponent("settings.json", isDirectory: false)
+        return [
+            base
+                .appendingPathComponent("nook", isDirectory: true)
+                .appendingPathComponent("settings.json", isDirectory: false),
+            base
+                .appendingPathComponent("Nook", isDirectory: true)
+                .appendingPathComponent("settings.json", isDirectory: false),
+        ]
     }
 
     public static var defaultFileURL: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         return base
-            .appendingPathComponent("nook", isDirectory: true)
+            .appendingPathComponent("knook", isDirectory: true)
             .appendingPathComponent("settings.json", isDirectory: false)
     }
 
     private func migrateLegacySettingsIfNeeded() throws {
-        guard !FileManager.default.fileExists(atPath: fileURL.path),
-              let legacyFileURL,
-              legacyFileURL.standardizedFileURL != fileURL.standardizedFileURL,
-              FileManager.default.fileExists(atPath: legacyFileURL.path)
-        else {
+        guard !FileManager.default.fileExists(atPath: fileURL.path) else {
+            return
+        }
+
+        guard let legacyFileURL = legacyFileURLs.first(where: {
+            FileManager.default.fileExists(atPath: $0.path)
+        }) else {
             return
         }
 

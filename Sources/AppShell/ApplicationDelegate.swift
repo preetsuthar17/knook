@@ -128,7 +128,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     static func configureAppIcon(bundleURL: URL = Bundle.main.bundleURL) {
         guard shouldApplyRuntimeIcon(bundleURL: bundleURL),
-              let iconURL = Bundle.module.url(forResource: "AppIcon", withExtension: "png"),
+              let iconURL = resourceBundle.url(forResource: "AppIcon", withExtension: "png"),
               let iconImage = NSImage(contentsOf: iconURL)
         else {
             return
@@ -140,5 +140,13 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     nonisolated static func shouldApplyRuntimeIcon(bundleURL: URL) -> Bool {
         bundleURL.pathExtension != "app"
+    }
+
+    private static var resourceBundle: Bundle {
+        #if SWIFT_PACKAGE
+        Bundle.module
+        #else
+        Bundle.main
+        #endif
     }
 }

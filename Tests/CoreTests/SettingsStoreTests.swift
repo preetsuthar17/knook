@@ -5,7 +5,7 @@ import XCTest
 final class SettingsStoreTests: XCTestCase {
     func testDefaultFileURLUsesLowercaseDirectory() {
         XCTAssertEqual(SettingsStore.defaultFileURL.lastPathComponent, "settings.json")
-        XCTAssertEqual(SettingsStore.defaultFileURL.deletingLastPathComponent().lastPathComponent, "nook")
+        XCTAssertEqual(SettingsStore.defaultFileURL.deletingLastPathComponent().lastPathComponent, "knook")
     }
 
     func testSettingsStorePersistsAndLoadsMigratedSettings() throws {
@@ -93,7 +93,7 @@ final class SettingsStoreTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let newFileURL = directory
             .appendingPathComponent("current", isDirectory: true)
-            .appendingPathComponent("nook", isDirectory: true)
+            .appendingPathComponent("knook", isDirectory: true)
             .appendingPathComponent("settings.json", isDirectory: false)
         let legacyFileURL = directory
             .appendingPathComponent("legacy", isDirectory: true)
@@ -124,7 +124,7 @@ final class SettingsStoreTests: XCTestCase {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         let newFileURL = directory
             .appendingPathComponent("current", isDirectory: true)
-            .appendingPathComponent("nook", isDirectory: true)
+            .appendingPathComponent("knook", isDirectory: true)
             .appendingPathComponent("settings.json", isDirectory: false)
         let legacyFileURL = directory
             .appendingPathComponent("legacy", isDirectory: true)

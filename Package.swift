@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "nook",
+    name: "knook",
     platforms: [
         .macOS(.v13),
     ],
@@ -13,7 +13,7 @@ let package = Package(
             targets: ["Core"]
         ),
         .executable(
-            name: "nook",
+            name: "knook",
             targets: ["AppShell"]
         ),
     ],

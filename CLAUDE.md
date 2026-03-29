@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What is nook?
+## What is knook?
 
 A privacy-first, open-source macOS menu bar app that reminds users to take screen breaks. All data stays on-device — no accounts, telemetry, or cloud syncing. Built with SwiftUI as a native MenuBarExtra.
 
@@ -16,7 +16,7 @@ swift test --filter CoreTests.BreakSchedulerTests      # Run a single test class
 swift test --filter CoreTests.BreakSchedulerTests/testBreakInitiatesAfterWorkInterval  # Single test
 ```
 
-Environment: `NOOK_FORCE_ONBOARDING=1 swift run` to force the onboarding flow during development.
+Environment: `KNOOK_FORCE_ONBOARDING=1 swift run` to force the onboarding flow during development.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ Environment: `NOOK_FORCE_ONBOARDING=1 swift run` to force the onboarding flow du
 
 - `AppModel` (@MainActor) is the single source of truth. It orchestrates all engines via a 1Hz timer tick and system wake events.
 - `BreakScheduler` is a state machine managing break timing, reminders, skip policies, postpone, idle reset, and office hours. Returns immutable `Snapshot` structs describing state transitions.
-- `SettingsStore` persists `AppSettings` as versioned JSON to `~/Library/Application Support/nook/settings.json` and migrates legacy data from `~/Library/Application Support/Nook/settings.json` on load.
+- `SettingsStore` persists `AppSettings` as versioned JSON to `~/Library/Application Support/knook/settings.json` and migrates legacy data from `~/Library/Application Support/nook/settings.json` and `~/Library/Application Support/Nook/settings.json` on load.
 - `AppWindowCoordinator` dispatches all transient windows (reminder panels, break overlays, wellness reminders, hints) and prevents stacking conflicts.
 - `ActivityMonitor` detects idle time via `CGEventSource`.
 - `WellnessReminderEngine` and `ContextualEducationEngine` run independently from the break scheduler.

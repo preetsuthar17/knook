@@ -3,10 +3,16 @@
 ## Build and signing
 
 - Confirm Xcode is selected with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
-- Set the Developer ID signing identity
-- Archive the app bundle
-- Notarize the build
-- Staple the notarization ticket
+- Install the project generator dependency once with `gem install --user-install xcodeproj`
+- Set the `DEVELOPMENT_TEAM` and `Developer ID Application` identity for the `knook` target
+- Generate or refresh `knook.xcodeproj` with `ruby packaging/macos/generate-xcodeproj.rb`
+- Signed release path:
+  - Archive and export the app with `packaging/macos/release.sh <version>`
+  - Notarize the DMG build
+  - Staple the notarization ticket
+- Unsigned preview path:
+  - Build and package with `KNOOK_UNSIGNED_PREVIEW=1 packaging/macos/release.sh <version>`
+  - Document the first-launch Gatekeeper workaround in the release notes and cask caveats
 
 ## Functional QA
 
@@ -20,6 +26,7 @@
 
 ## Distribution
 
-- Attach screenshots to the release notes
-- Publish the notarized archive
-- Update the Homebrew cask with the new version and SHA
+- Attach screenshots to the GitHub release notes
+- Publish the `knook-<version>.dmg`
+- Update `packaging/homebrew/Casks/knook.rb` with the new version and SHA
+- Copy the cask into `preetsuthar17/homebrew-tap`

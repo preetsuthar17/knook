@@ -24,7 +24,7 @@ struct StatusMenuView: View {
 
             Divider().padding(.vertical, 4)
 
-            PopoverMenuRow(title: "Start Using nook", systemImage: "play.fill") {
+            PopoverMenuRow(title: "Start Using knook", systemImage: "play.fill") {
                 model.dismissStarterSetupWithDefaults()
                 dismiss()
             }

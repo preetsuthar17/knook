@@ -1,36 +1,36 @@
-# nook
+# knook
 
 <p align="center">
-  <img src="Sources/AppShell/Resources/AppIcon.png" alt="nook" width="128">
+  <img src="Sources/AppShell/Resources/AppIcon.png" alt="knook" width="128">
 </p>
 
 <p align="center">
   <strong>Open-source, privacy-first macOS break reminders for a calmer work rhythm</strong>
 </p>
 
-nook is a native menu bar app for macOS that helps you take screen breaks without accounts, subscriptions, or cloud syncing.
+knook is a native menu bar app for macOS that helps you take screen breaks without accounts, subscriptions, or cloud syncing.
 
-> nook is in active development and should be treated as early alpha software. UI details, contributor workflows, and local setup may still change as the app is being hardened.
+> knook is in active development and should be treated as early alpha software. UI details, contributor workflows, and local setup may still change as the app is being hardened.
 
-[Quick Start](#quick-start) · [What nook is](#what-nook-is) · [Why nook exists](#why-nook-exists) · [What It Feels Like](#what-it-feels-like) · [Current Capabilities](#current-capabilities) · [Repository Map](#repository-map) · [Contributing](#contributing) · [Support](#support)
+[Quick Start](#quick-start) · [What knook is](#what-knook-is) · [Why knook exists](#why-knook-exists) · [What It Feels Like](#what-it-feels-like) · [Current Capabilities](#current-capabilities) · [Repository Map](#repository-map) · [Contributing](#contributing) · [Support](#support)
 
-## What nook is
+## What knook is
 
-nook is a native SwiftUI menu bar app for screen-break reminders on macOS.
+knook is a native SwiftUI menu bar app for screen-break reminders on macOS.
 
 It keeps track of your break rhythm locally, offers short and long breaks, and adds lightweight context-aware pause behavior so reminders can stay useful without feeling overly disruptive during focused work.
 
-## Why nook exists
+## Why knook exists
 
 Healthy break reminders should be available without a paywall, account system, or opaque syncing model.
 
-nook is being built as a community-owned, privacy-first alternative in this category: small, local-first, and understandable from the inside out.
+knook is being built as a community-owned, privacy-first alternative in this category: small, local-first, and understandable from the inside out.
 
 ## What It Feels Like
 
-In day-to-day use, nook is meant to stay quiet until it is helpful:
+In day-to-day use, knook is meant to stay quiet until it is helpful:
 
-1. You launch nook and it lives in the menu bar.
+1. You launch knook and it lives in the menu bar.
 2. It keeps time for your next break locally.
 3. It gives you a heads-up reminder before the break starts.
 4. It shows a full break overlay when it is time to pause.
@@ -40,7 +40,7 @@ The goal is not to create a complicated wellness platform. The goal is to make t
 
 ## Current Capabilities
 
-nook currently provides:
+knook currently provides:
 
 - a native macOS menu bar app in SwiftUI
 - a scheduler core in `Core`
@@ -54,7 +54,20 @@ nook currently provides:
 
 ## Quick Start
 
-The current path is source build only. There is no packaged or notarized public release yet.
+The fastest path today is either a source build or an unsigned preview release. A notarized public release will come later once Apple Developer signing is in place.
+
+### Preview install
+
+Once the preview tap is published, install with:
+
+```bash
+brew tap preetsuthar17/tap
+brew install --cask knook
+```
+
+Because preview builds are not notarized yet, macOS may block the first launch. If that happens, open `/Applications/knook.app` once via Finder with right-click -> `Open`, then confirm the prompt.
+
+### Source build
 
 Requirements:
 
@@ -74,7 +87,7 @@ Run the app:
 swift run
 ```
 
-For the full local development workflow, including `swift run nook`, filtered test commands, and launch-time overrides such as `NOOK_WORK`, `NOOK_BREAK`, and `NOOK_FORCE_ONBOARDING`, see [docs/local-development.md](docs/local-development.md).
+For the full local development workflow, including `swift run knook`, filtered test commands, and launch-time overrides such as `KNOOK_WORK`, `KNOOK_BREAK`, and `KNOOK_FORCE_ONBOARDING`, see [docs/local-development.md](docs/local-development.md).
 
 Quick examples:
 
@@ -83,7 +96,7 @@ swift test
 ```
 
 ```bash
-NOOK_FORCE_ONBOARDING=1 swift run
+KNOOK_FORCE_ONBOARDING=1 swift run
 ```
 
 `swift test` currently expects a full Xcode installation in this repository's setup.
@@ -91,9 +104,9 @@ NOOK_FORCE_ONBOARDING=1 swift run
 ## Known Limitations
 
 - source build and developer setup are required today
-- there is no notarized app bundle, packaged release, or Homebrew install yet
+- preview builds are unsigned and not notarized yet
 - screenshots and demo assets are not included in the README yet
-- packaging and release distribution are still future work rather than current deliverables
+- release distribution is currently limited to preview artifacts and a custom Homebrew tap
 - the contributor-facing test workflow still needs cleanup
 
 ## Repository Map
@@ -102,7 +115,7 @@ NOOK_FORCE_ONBOARDING=1 swift run
 - `Sources/Core/`: scheduler, models, persistence, and platform integration
 - `Tests/`: scheduler, persistence, and app test coverage
 - `docs/`: release and supporting project docs, including the local development guide
-- `packaging/`: macOS packaging assets and helper scripts
+- `packaging/`: macOS packaging assets, Xcode project generator, release scripts, and Homebrew cask template
 
 ## Contributing
 
@@ -116,7 +129,7 @@ If you want to support ongoing maintenance, see [SUPPORT.md](SUPPORT.md).
 
 ## Privacy
 
-nook stores its settings locally in Application Support and does not send data to a server.
+knook stores its settings locally in Application Support and does not send data to a server.
 
 ## Roadmap
 
@@ -132,8 +145,8 @@ nook stores its settings locally in Application Support and does not send data t
 - additional smart pause providers such as meetings and video contexts
 - AppleScript or Shortcuts support
 - Focus Filters integration
-- notarized distribution and release packaging
+- published notarized distribution
 
 ## License
 
-nook is available under the [MIT License](LICENSE).
+knook is available under the [MIT License](LICENSE).
