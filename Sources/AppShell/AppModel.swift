@@ -13,6 +13,7 @@ final class AppModel: ObservableObject {
     @Published var launchPhase: AppLaunchPhase
     @Published var menuBarMode: MenuBarMode
     @Published var onboardingState: OnboardingState
+    @Published var updateState: UpdateState
     @Published var settingsError: String?
     @Published var pendingWellnessEvent: WellnessReminderEvent?
 
@@ -24,11 +25,13 @@ final class AppModel: ObservableObject {
     let launchAtLoginController: LaunchAtLoginController
     private let workspaceContextProvider: any WorkspaceContextProviding
     private let fullscreenPauseProvider: FullscreenPauseConditionProvider
+    private let updateManager: any UpdateManaging
     private let injectedWindowCoordinator: (any WindowCoordinator)?
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "knook", category: "Timer")
 
     private var timerCancellable: AnyCancellable?
     private var wakeObserver: NSObjectProtocol?
+    private var updateStateCancellable: AnyCancellable?
     private var hasHandledInitialAppLaunch = false
 
     private lazy var settingsWindowController = SettingsWindowController()
@@ -51,6 +54,7 @@ final class AppModel: ObservableObject {
         scheduler: BreakScheduler? = nil,
         launchAtLoginController: LaunchAtLoginController = LaunchAtLoginController(),
         workspaceContextProvider: any WorkspaceContextProviding = WorkspaceContextProvider(),
+        updateManager: (any UpdateManaging)? = nil,
         windowCoordinator: (any WindowCoordinator)? = nil,
         launchConfiguration: AppLaunchConfiguration = .current,
         startsTimer: Bool = true,
@@ -86,7 +90,9 @@ final class AppModel: ObservableObject {
         self.launchAtLoginController = launchAtLoginController
         self.workspaceContextProvider = workspaceContextProvider
         self.fullscreenPauseProvider = fullscreenPauseProvider
+        self.updateManager = updateManager ?? NullUpdateManager()
         self.injectedWindowCoordinator = windowCoordinator
+        self.updateState = .idle
 
         scheduler.setPauseProviders(Self.makePauseProviders(
             settings: loadedSettings,
@@ -101,6 +107,7 @@ final class AppModel: ObservableObject {
         if observesSystemEvents {
             self.bindSystemEvents()
         }
+        self.bindUpdateManager()
         if startsTimer {
             self.startTimer()
         }
@@ -249,6 +256,20 @@ final class AppModel: ObservableObject {
         settingsWindowController.show(model: self)
     }
 
+    func checkForUpdates() {
+        updateManager.checkForUpdates()
+    }
+
+    func installAvailableUpdate() {
+        guard updateState.isAvailable else { return }
+        updateState = .installing
+        updateManager.installAvailableUpdate()
+    }
+
+    func dismissUpdateNotice() {
+        updateState = .idle
+    }
+
     func dismissBreakWindow() {
         windowCoordinator.hideBreakOverlay()
     }
@@ -290,6 +311,13 @@ final class AppModel: ObservableObject {
                 self?.tick(now: Date())
             }
         }
+    }
+
+    private func bindUpdateManager() {
+        updateStateCancellable = updateManager.statePublisher
+            .sink { [weak self] state in
+                self?.updateState = state
+            }
     }
 
     private func applySettingsSideEffects() {

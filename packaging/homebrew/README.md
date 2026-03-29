@@ -27,8 +27,8 @@ cp packaging/homebrew/Casks/knook.rb "$(brew --repository preetsuthar17/homebrew
 Preview release flow:
 
 ```bash
-KNOOK_UNSIGNED_PREVIEW=1 packaging/macos/release.sh 0.1.0
-gh release create v0.1.0 build/knook-0.1.0.dmg --title "knook 0.1.0" --notes "Unsigned preview release."
+KNOOK_UNSIGNED_PREVIEW=1 packaging/macos/release.sh 0.1.3
+gh release create v0.1.3 build/knook-0.1.3.dmg --title "knook 0.1.3" --notes "Unsigned preview release."
 ```
 
 Current install guidance for users:
@@ -38,4 +38,12 @@ brew tap preetsuthar17/tap
 brew install --cask knook
 xattr -dr com.apple.quarantine /Applications/knook.app
 open /Applications/knook.app
+```
+
+Package upgrade guidance for users:
+
+```bash
+brew update
+brew upgrade --cask knook
+defaults read /Applications/knook.app/Contents/Info CFBundleShortVersionString
 ```

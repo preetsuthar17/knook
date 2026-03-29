@@ -6,6 +6,7 @@ import SwiftUI
 final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     let model: AppModel
 
+    private let updateManager: any UpdateManaging
     private var statusItem: NSStatusItem!
     private var popover: NSPopover!
     private var cancellables = Set<AnyCancellable>()
@@ -13,7 +14,18 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     private var lastCloseDate: Date = .distantPast
 
     override init() {
-        self.model = AppModel()
+        let resolvedUpdateManager = GitHubReleaseUpdateManager()
+        self.updateManager = resolvedUpdateManager
+        self.model = AppModel(updateManager: resolvedUpdateManager)
+        super.init()
+    }
+
+    init(
+        model: AppModel,
+        updateManager: any UpdateManaging
+    ) {
+        self.updateManager = updateManager
+        self.model = model
         super.init()
     }
 
@@ -39,11 +51,12 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         popover = pop
 
         model.$appState
-            .combineLatest(model.$launchPhase)
-            .sink { [weak self] appState, launchPhase in
+            .combineLatest(model.$launchPhase, model.$updateState)
+            .sink { [weak self] appState, launchPhase, updateState in
                 let content = MenuBarLabelFormatter.content(
                     launchPhase: launchPhase,
-                    state: appState
+                    state: appState,
+                    showsUpdateBadge: updateState.isAvailable
                 )
                 self?.updateStatusBarButton(content: content)
             }
@@ -112,10 +125,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private func updateStatusBarButton(content: MenuBarLabelContent) {
         guard let button = statusItem.button else { return }
-        button.image = NSImage(
+        let symbolImage = NSImage(
             systemSymbolName: content.symbolName,
             accessibilityDescription: content.accessibilityLabel
         )
+        button.image = content.showsUpdateBadge ? badgedMenuBarImage(from: symbolImage) : symbolImage
         if let countdown = content.countdownText {
             button.title = countdown
             button.imagePosition = .imageLeading
@@ -124,6 +138,28 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
             button.title = ""
             button.imagePosition = .imageOnly
         }
+    }
+
+    private func badgedMenuBarImage(from baseImage: NSImage?) -> NSImage? {
+        guard let baseImage else { return nil }
+
+        let badgeSize = NSSize(width: 7, height: 7)
+        let image = NSImage(size: baseImage.size)
+        image.lockFocus()
+        defer { image.unlockFocus() }
+
+        baseImage.draw(in: NSRect(origin: .zero, size: baseImage.size))
+
+        let badgeRect = NSRect(
+            x: max(baseImage.size.width - badgeSize.width - 1, 0),
+            y: max(baseImage.size.height - badgeSize.height - 1, 0),
+            width: badgeSize.width,
+            height: badgeSize.height
+        )
+        NSColor.systemRed.setFill()
+        NSBezierPath(ovalIn: badgeRect).fill()
+
+        return image
     }
 
     static func configureAppIcon(bundleURL: URL = Bundle.main.bundleURL) {

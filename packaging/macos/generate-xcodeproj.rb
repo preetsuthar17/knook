@@ -14,6 +14,8 @@ end
 
 repo_root = File.expand_path("../..", __dir__)
 project_path = File.join(repo_root, "knook.xcodeproj")
+marketing_version = ENV.fetch("KNOOK_MARKETING_VERSION", "0.1.3")
+current_project_version = ENV.fetch("KNOOK_CURRENT_PROJECT_VERSION", "1")
 
 FileUtils.rm_rf(project_path)
 project = Xcodeproj::Project.new(project_path)
@@ -45,7 +47,7 @@ app_target.build_configuration_list.build_configurations.each do |config|
   config.build_settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "AppIcon"
   config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "Developer ID Application"
   config.build_settings["CODE_SIGN_STYLE"] = "Automatic"
-  config.build_settings["CURRENT_PROJECT_VERSION"] = "1"
+  config.build_settings["CURRENT_PROJECT_VERSION"] = current_project_version
   config.build_settings["DEVELOPMENT_TEAM"] = ""
   config.build_settings["ENABLE_HARDENED_RUNTIME"] = "YES"
   config.build_settings["GENERATE_INFOPLIST_FILE"] = "NO"
@@ -55,7 +57,7 @@ app_target.build_configuration_list.build_configurations.each do |config|
     "@executable_path/../Frameworks",
   ]
   config.build_settings["MACOSX_DEPLOYMENT_TARGET"] = "13.0"
-  config.build_settings["MARKETING_VERSION"] = "0.1.0"
+  config.build_settings["MARKETING_VERSION"] = marketing_version
   config.build_settings["PRODUCT_BUNDLE_IDENTIFIER"] = "io.github.preetsuthar17.knook"
   config.build_settings["PRODUCT_NAME"] = "knook"
   config.build_settings["SDKROOT"] = "macosx"
@@ -121,5 +123,12 @@ app_target.frameworks_build_phase.files << package_build_file
 
 project.sort
 project.save
+
+workspace_swiftpm_dir = File.join(project_path, "project.xcworkspace", "xcshareddata", "swiftpm")
+root_package_resolved = File.join(repo_root, "Package.resolved")
+if File.exist?(root_package_resolved)
+  FileUtils.mkdir_p(workspace_swiftpm_dir)
+  FileUtils.cp(root_package_resolved, File.join(workspace_swiftpm_dir, "Package.resolved"))
+end
 
 puts "Generated #{project_path}"

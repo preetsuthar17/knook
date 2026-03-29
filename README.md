@@ -54,25 +54,29 @@ knook currently provides:
 
 ## Quick Start
 
-The fastest path today is either a source build or an unsigned preview release. A notarized public release will come later once Apple Developer signing is in place.
+The fastest install path is the latest GitHub release or the Homebrew cask.
 
-### Preview install
+### Direct install
 
-Once the preview tap is published, install with:
+Download the latest release from GitHub, move `knook.app` into `/Applications`, and launch it from there.
+
+### Optional Homebrew install
+
+Install with:
 
 ```bash
 brew tap preetsuthar17/tap
 brew install --cask knook
 ```
 
-Because preview builds are not notarized yet, macOS can show a misleading "knook is damaged" dialog on first launch.
-
-After install, clear quarantine once and launch:
+Upgrade later with:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/knook.app
-open /Applications/knook.app
+brew update
+brew upgrade --cask knook
 ```
+
+When a newer GitHub release is published, knook shows an update banner in the menu bar popover. The `Update` button opens a Homebrew upgrade command in Terminal when Homebrew is available and falls back to the GitHub release page otherwise.
 
 ### Source build
 
@@ -113,9 +117,8 @@ KNOOK_FORCE_ONBOARDING=1 swift run
 ## Known Limitations
 
 - source build and developer setup are required today
-- preview builds are unsigned and not notarized yet
 - screenshots and demo assets are not included in the README yet
-- release distribution is currently limited to preview artifacts and a custom Homebrew tap
+- signed and notarized distribution is still being finalized
 - the contributor-facing test workflow still needs cleanup
 
 ## Repository Map

@@ -79,4 +79,25 @@ final class MenuBarLabelFormatterTests: XCTestCase {
         XCTAssertEqual(content.symbolName, "pause.fill")
         XCTAssertNil(content.countdownText)
     }
+
+    func testCarriesUpdateBadgeStateIntoMenuBarContent() {
+        let now = Date(timeIntervalSinceReferenceDate: 1_000)
+        let state = AppState(
+            now: now,
+            nextBreakDate: now.addingTimeInterval(5 * 60),
+            activeBreak: nil,
+            isPaused: false,
+            pauseReason: nil,
+            statusText: "Next break in 05:00"
+        )
+
+        let content = MenuBarLabelFormatter.content(
+            launchPhase: .ready,
+            state: state,
+            showsUpdateBadge: true
+        )
+
+        XCTAssertTrue(content.showsUpdateBadge)
+        XCTAssertEqual(content.symbolName, "hourglass")
+    }
 }

@@ -7,10 +7,87 @@ struct StatusMenuView: View {
     var dismiss: () -> Void
 
     var body: some View {
-        if model.menuBarMode == .setup {
-            setupMenu
-        } else {
-            activeMenu
+        VStack(alignment: .leading, spacing: 0) {
+            if shouldShowUpdateBanner {
+                updateBanner
+                Divider().padding(.vertical, 4)
+            }
+
+            if model.menuBarMode == .setup {
+                setupMenu
+            } else {
+                activeMenu
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var updateBanner: some View {
+        switch model.updateState {
+        case let .available(version, releaseURL):
+            VStack(alignment: .leading, spacing: 10) {
+                Text("knook \(version) is available")
+                    .font(.headline)
+
+                Text("Update with Homebrew or open the latest GitHub release if Homebrew is unavailable.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 8) {
+                    Button("Update") {
+                        model.installAvailableUpdate()
+                        dismiss()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button("Later") {
+                        model.dismissUpdateNotice()
+                    }
+                    .buttonStyle(.bordered)
+
+                    if let releaseURL {
+                        Link("View Release", destination: releaseURL)
+                            .font(.footnote)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+        case let .error(message):
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Update check failed")
+                    .font(.headline)
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 8) {
+                    Button("Try Again") {
+                        model.checkForUpdates()
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button("Dismiss") {
+                        model.dismissUpdateNotice()
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
+        default:
+            EmptyView()
+        }
+    }
+
+    private var shouldShowUpdateBanner: Bool {
+        switch model.updateState {
+        case .available, .error:
+            true
+        default:
+            false
         }
     }
 
@@ -26,6 +103,11 @@ struct StatusMenuView: View {
 
             PopoverMenuRow(title: "Start Using knook", systemImage: "play.fill") {
                 model.dismissStarterSetupWithDefaults()
+                dismiss()
+            }
+
+            PopoverMenuRow(title: "Check for Updates", systemImage: "arrow.down.circle") {
+                model.checkForUpdates()
                 dismiss()
             }
 
@@ -86,6 +168,11 @@ struct StatusMenuView: View {
 
             PopoverMenuRow(title: "Open Settings", systemImage: "gearshape") {
                 model.openSettings()
+                dismiss()
+            }
+
+            PopoverMenuRow(title: "Check for Updates", systemImage: "arrow.down.circle") {
+                model.checkForUpdates()
                 dismiss()
             }
 

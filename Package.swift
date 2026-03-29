@@ -26,7 +26,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "AppShell",
-            dependencies: ["Core", "ConfettiSwiftUI"],
+            dependencies: [
+                "Core",
+                "ConfettiSwiftUI",
+            ],
             resources: [.process("Resources")]
         ),
         .testTarget(

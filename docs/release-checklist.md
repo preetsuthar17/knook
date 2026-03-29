@@ -4,6 +4,7 @@
 
 - Confirm Xcode is selected with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
 - Install the project generator dependency once with `gem install --user-install xcodeproj`
+- For testing update prompts across versions, keep the repo default on the newer release version and build the older local app with `KNOOK_MARKETING_VERSION=<older-version> packaging/macos/release.sh <older-version>`
 - Set the `DEVELOPMENT_TEAM` and `Developer ID Application` identity for the `knook` target
 - Generate or refresh `knook.xcodeproj` with `ruby packaging/macos/generate-xcodeproj.rb`
 - Signed release path:

@@ -21,7 +21,11 @@ export_options_plist="${repo_root}/packaging/macos/ExportOptions.plist"
 signing_identity=${KNOOK_SIGNING_IDENTITY:-}
 notary_profile=${KNOOK_NOTARY_PROFILE:-}
 unsigned_preview=${KNOOK_UNSIGNED_PREVIEW:-0}
+marketing_version=${KNOOK_MARKETING_VERSION:-${version}}
+current_project_version=${KNOOK_CURRENT_PROJECT_VERSION:-1}
 
+KNOOK_MARKETING_VERSION="${marketing_version}" \
+KNOOK_CURRENT_PROJECT_VERSION="${current_project_version}" \
 ruby "${repo_root}/packaging/macos/generate-xcodeproj.rb"
 
 if [[ "${unsigned_preview}" == "1" ]]; then
@@ -31,6 +35,8 @@ if [[ "${unsigned_preview}" == "1" ]]; then
     -scheme "${scheme}" \
     -configuration Release \
     -derivedDataPath "${derived_data_path}" \
+    CURRENT_PROJECT_VERSION="${current_project_version}" \
+    MARKETING_VERSION="${marketing_version}" \
     CODE_SIGNING_ALLOWED=NO \
     build
 
@@ -42,6 +48,8 @@ else
     -scheme "${scheme}" \
     -configuration Release \
     -archivePath "${archive_path}" \
+    CURRENT_PROJECT_VERSION="${current_project_version}" \
+    MARKETING_VERSION="${marketing_version}" \
     archive
 
   xcodebuild \

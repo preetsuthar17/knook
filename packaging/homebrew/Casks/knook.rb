@@ -1,11 +1,11 @@
 cask "knook" do
-  version "0.1.0"
-  sha256 "c678dacaafd5736132283e237a7e59ae6d10703f43ce920b85cc1488fdc26136"
+  version "0.1.3"
+  sha256 "5ef5e574f54ae3ebc4581dee6ab89df70943568ff25b464da253c406efedb4e9"
 
-  url "https://github.com/preetsuthar17/Nook/releases/download/v#{version}/knook-#{version}.dmg"
+  url "https://github.com/preetsuthar17/knook/releases/download/v#{version}/knook-#{version}.dmg"
   name "knook"
   desc "Native macOS menu bar app for screen-break reminders"
-  homepage "https://github.com/preetsuthar17/Nook"
+  homepage "https://github.com/preetsuthar17/knook"
 
   livecheck do
     url :url
