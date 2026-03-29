@@ -126,35 +126,22 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private func updateStatusBarButton(content: MenuBarLabelContent) {
         guard let button = statusItem.button else { return }
+        guard content != lastMenuBarContent else { return }
         defer { lastMenuBarContent = content }
 
-        let imageChanged = lastMenuBarContent?.symbolName != content.symbolName
-            || lastMenuBarContent?.showsUpdateBadge != content.showsUpdateBadge
-
-        if imageChanged {
-            let symbolImage = NSImage(
-                systemSymbolName: content.symbolName,
-                accessibilityDescription: content.accessibilityLabel
-            )
-            symbolImage?.isTemplate = true
-            button.image = content.showsUpdateBadge ? badgedMenuBarImage(from: symbolImage) : symbolImage
-        }
-
-        let hadCountdown = lastMenuBarContent?.countdownText != nil
-        let hasCountdown = content.countdownText != nil
-
-        if hadCountdown != hasCountdown {
-            if hasCountdown {
-                button.imagePosition = .imageLeading
-                button.font = NSFont.monospacedDigitSystemFont(ofSize: 0, weight: .regular)
-            } else {
-                button.title = ""
-                button.imagePosition = .imageOnly
-            }
-        }
-
-        if let countdown = content.countdownText, countdown != lastMenuBarContent?.countdownText {
+        let symbolImage = NSImage(
+            systemSymbolName: content.symbolName,
+            accessibilityDescription: content.accessibilityLabel
+        )
+        symbolImage?.isTemplate = true
+        button.image = content.showsUpdateBadge ? badgedMenuBarImage(from: symbolImage) : symbolImage
+        if let countdown = content.countdownText {
             button.title = countdown
+            button.imagePosition = .imageLeading
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: 0, weight: .regular)
+        } else {
+            button.title = ""
+            button.imagePosition = .imageOnly
         }
     }
 
@@ -177,7 +164,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
         NSColor.systemRed.setFill()
         NSBezierPath(ovalIn: badgeRect).fill()
 
-        image.isTemplate = true
         return image
     }
 
