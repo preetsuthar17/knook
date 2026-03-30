@@ -80,7 +80,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private func openPopover(relativeTo button: NSStatusBarButton) {
         NSApp.activate(ignoringOtherApps: true)
-        let isDark = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         popover.contentViewController?.view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
