@@ -1,19 +1,27 @@
 # Release Checklist
 
-## Build and signing
+## One-time setup
 
 - Confirm Xcode is selected with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
 - Install the project generator dependency once with `gem install --user-install xcodeproj`
+- Store notarization credentials in the keychain (once per machine):
+  ```bash
+  xcrun notarytool store-credentials knook-notary \
+    --apple-id <your-apple-id-email> \
+    --team-id BDT655MGNN \
+    --password <app-specific-password>
+  ```
+  Generate an app-specific password at [appleid.apple.com](https://appleid.apple.com) > Sign-In and Security > App-Specific Passwords.
+
+## Build and signing
+
 - For testing update prompts across versions, keep the repo default on the newer release version and build the older local app with `KNOOK_MARKETING_VERSION=<older-version> packaging/macos/release.sh <older-version>`
-- Set the `DEVELOPMENT_TEAM` and `Developer ID Application` identity for the `knook` target
-- Generate or refresh `knook.xcodeproj` with `ruby packaging/macos/generate-xcodeproj.rb`
-- Signed release path:
-  - Archive and export the app with `packaging/macos/release.sh <version>`
-  - Notarize the DMG build
-  - Staple the notarization ticket
+- Signed + notarized release (default):
+  - Run `packaging/macos/release.sh <version>`
+  - The script archives, exports, signs the DMG, submits for notarization, and staples the ticket automatically
 - Unsigned preview path:
   - Build and package with `KNOOK_UNSIGNED_PREVIEW=1 packaging/macos/release.sh <version>`
-  - Document the first-launch Gatekeeper workaround in the release notes and cask caveats
+  - Document the first-launch Gatekeeper workaround in the release notes
 
 ## Functional QA
 

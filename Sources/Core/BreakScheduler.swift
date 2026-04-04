@@ -152,13 +152,10 @@ public final class BreakScheduler: @unchecked Sendable {
             return snapshot(now: now, breakJustStarted: false, breakJustEnded: false)
         }
 
-        let postponeDate = now.addingTimeInterval(TimeInterval(minutes * 60))
+        let baseDate = nextBreakDate ?? now
+        let postponeDate = baseDate.addingTimeInterval(TimeInterval(minutes * 60))
         postponedUntil = postponeDate
-        if let nextBreakDate {
-            self.nextBreakDate = max(nextBreakDate, postponeDate)
-        } else {
-            self.nextBreakDate = postponeDate
-        }
+        self.nextBreakDate = postponeDate
         statusText = "Break postponed by \(minutes) minutes"
         return snapshot(now: now, breakJustStarted: false, breakJustEnded: false)
     }

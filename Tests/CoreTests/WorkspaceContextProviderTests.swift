@@ -1,5 +1,5 @@
 import Foundation
-import Core
+@testable import Core
 import XCTest
 
 final class WorkspaceContextProviderTests: XCTestCase {
@@ -41,5 +41,36 @@ final class WorkspaceContextProviderTests: XCTestCase {
         )
 
         XCTAssertFalse(provider.isPaused(at: Date()))
+    }
+
+    // MARK: - isNearFullscreen
+
+    private let screenFrame = CGRect(x: 0, y: 0, width: 1728, height: 1117)
+
+    func testFullscreenWindowDetected() {
+        let bounds = CGRect(x: 0, y: 0, width: 1728, height: 1117)
+        XCTAssertTrue(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: screenFrame))
+    }
+
+    func testFullscreenWindowWithSmallDeltaDetected() {
+        let bounds = CGRect(x: 0, y: 0, width: 1722, height: 1112)
+        XCTAssertTrue(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: screenFrame))
+    }
+
+    func testMaximizedWindowNotDetected() {
+        // Maximized window: full width but ~25px shorter (menu bar gap)
+        let bounds = CGRect(x: 0, y: 25, width: 1728, height: 1092)
+        XCTAssertFalse(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: screenFrame))
+    }
+
+    func testMaximizedWindowWithDockNotDetected() {
+        // Maximized window with dock visible: shorter and narrower
+        let bounds = CGRect(x: 80, y: 25, width: 1648, height: 1092)
+        XCTAssertFalse(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: screenFrame))
+    }
+
+    func testZeroScreenFrameReturnsFalse() {
+        let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
+        XCTAssertFalse(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: .zero))
     }
 }

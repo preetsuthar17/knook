@@ -377,6 +377,16 @@ final class AppModel: ObservableObject {
     }
 
     private func processWellnessReminders(now: Date, idleSeconds: TimeInterval) {
+        if let existing = pendingWellnessEvent,
+           windowCoordinator.isVisible(.wellnessReminder(existing.kind)) {
+            return
+        }
+
+        if let existing = pendingWellnessEvent,
+           !windowCoordinator.isVisible(.wellnessReminder(existing.kind)) {
+            pendingWellnessEvent = nil
+        }
+
         let context = WellnessContext(
             isOnboardingComplete: onboardingState.hasCompletedStarterSetup,
             isPaused: appState.isPaused,

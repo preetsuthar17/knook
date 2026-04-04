@@ -1,6 +1,6 @@
 cask "knook" do
-  version "0.1.9"
-  sha256 "a210d6d6852596044f5748a058a638d5bf7f67c8aba6e9c6cf743187cf46ebfe"
+  version "0.2.0"
+  sha256 ""
 
   url "https://github.com/preetsuthar17/knook/releases/download/v#{version}/knook-#{version}.dmg"
   name "knook"
@@ -15,14 +15,6 @@ cask "knook" do
   depends_on macos: ">= :ventura"
 
   app "knook.app"
-
-  caveats do
-    <<~EOS
-      This preview build is not notarized yet.
-      If macOS says knook is damaged on first launch, run:
-        xattr -dr com.apple.quarantine /Applications/knook.app
-    EOS
-  end
 
   zap trash: [
     "~/Library/Application Support/knook",

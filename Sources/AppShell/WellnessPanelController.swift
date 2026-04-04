@@ -47,7 +47,7 @@ final class WellnessPanelController {
         panel.level = .floating
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.collectionBehavior = [.canJoinAllSpaces, .transient]
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         return panel
     }
 }

@@ -29,6 +29,15 @@ enum OverlayWindowHelper {
         return window
     }
 
+    /// Cancel any in-flight alpha animations and snap to zero immediately.
+    static func cancelAnimations(on window: NSWindow) {
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0
+            window.animator().alphaValue = 0
+        }
+        window.alphaValue = 0
+    }
+
     static func presentOverlay<Content: View>(
         in window: NSWindow,
         rootView: Content,
@@ -36,6 +45,7 @@ enum OverlayWindowHelper {
         timingFunction: CAMediaTimingFunctionName = .easeOut
     ) {
         dismissGeneration &+= 1
+        cancelAnimations(on: window)
 
         let screenFrame = activeScreen.frame
         window.setFrame(screenFrame, display: true)

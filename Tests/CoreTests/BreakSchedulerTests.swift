@@ -57,7 +57,7 @@ final class BreakSchedulerTests: XCTestCase {
         _ = scheduler.advance(to: start, idleSeconds: 0)
         let postponed = scheduler.postpone(minutes: 5, now: start.addingTimeInterval(30))
 
-        XCTAssertEqual(postponed.state.nextBreakDate, start.addingTimeInterval(330))
+        XCTAssertEqual(postponed.state.nextBreakDate, start.addingTimeInterval(360))
     }
 
     func testHardcoreModePreventsSkippingActiveBreaks() {

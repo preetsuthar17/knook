@@ -25,6 +25,7 @@ output_dmg="${output_dir}/knook-${version}.dmg"
 rm -rf "${staging_dir}"
 mkdir -p "${staging_dir}"
 cp -R "${app_path}" "${staging_dir}/knook.app"
+ln -s /Applications "${staging_dir}/Applications"
 rm -f "${output_dmg}"
 
 hdiutil create \

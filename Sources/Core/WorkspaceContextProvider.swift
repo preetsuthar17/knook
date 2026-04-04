@@ -79,26 +79,20 @@ public final class WorkspaceContextProvider: WorkspaceContextProviding {
             }
 
             return screenFrames.contains { screenFrame in
-                isNearFullscreen(bounds: bounds, within: screenFrame)
+                Self.isNearFullscreen(bounds: bounds, within: screenFrame)
             }
         }
     }
 
-    private func isNearFullscreen(bounds: CGRect, within screenFrame: CGRect) -> Bool {
+    static func isNearFullscreen(bounds: CGRect, within screenFrame: CGRect) -> Bool {
         guard screenFrame.width > 0, screenFrame.height > 0 else { return false }
 
-        let intersection = bounds.intersection(screenFrame)
-        guard !intersection.isNull, !intersection.isEmpty else { return false }
-
-        let coverage = (intersection.width * intersection.height) / (screenFrame.width * screenFrame.height)
-        let minCoverage = 0.92
-        let maxInset = max(screenFrame.width, screenFrame.height) * 0.03
-
-        return coverage >= minCoverage &&
-            abs(bounds.minX - screenFrame.minX) <= maxInset &&
-            abs(bounds.minY - screenFrame.minY) <= maxInset &&
-            abs(bounds.maxX - screenFrame.maxX) <= maxInset &&
-            abs(bounds.maxY - screenFrame.maxY) <= maxInset
+        // Compare dimensions rather than positions to avoid AppKit↔CG coordinate
+        // mismatches. A true fullscreen window matches the full screen size (including
+        // the menu bar area), while a maximized window is 24+ px shorter.
+        let maxDelta: CGFloat = 12.0
+        return abs(bounds.width - screenFrame.width) <= maxDelta &&
+            abs(bounds.height - screenFrame.height) <= maxDelta
     }
 }
 

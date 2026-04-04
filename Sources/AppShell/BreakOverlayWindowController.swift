@@ -14,6 +14,7 @@ final class BreakOverlayWindowController {
 
     func show(session: BreakSession) {
         if isDismissing, let window {
+            OverlayWindowHelper.cancelAnimations(on: window)
             window.orderOut(nil)
             isDismissing = false
         }

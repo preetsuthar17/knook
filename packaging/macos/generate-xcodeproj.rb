@@ -14,7 +14,7 @@ end
 
 repo_root = File.expand_path("../..", __dir__)
 project_path = File.join(repo_root, "knook.xcodeproj")
-marketing_version = ENV.fetch("KNOOK_MARKETING_VERSION", "0.1.9")
+marketing_version = ENV.fetch("KNOOK_MARKETING_VERSION", "0.2.0")
 current_project_version = ENV.fetch("KNOOK_CURRENT_PROJECT_VERSION", "1")
 
 FileUtils.rm_rf(project_path)
@@ -48,7 +48,8 @@ app_target.build_configuration_list.build_configurations.each do |config|
   config.build_settings["CODE_SIGN_IDENTITY[sdk=macosx*]"] = "Developer ID Application"
   config.build_settings["CODE_SIGN_STYLE"] = "Automatic"
   config.build_settings["CURRENT_PROJECT_VERSION"] = current_project_version
-  config.build_settings["DEVELOPMENT_TEAM"] = ""
+  config.build_settings["CODE_SIGN_ENTITLEMENTS"] = "packaging/macos/knook.entitlements"
+  config.build_settings["DEVELOPMENT_TEAM"] = "BDT655MGNN"
   config.build_settings["ENABLE_HARDENED_RUNTIME"] = "YES"
   config.build_settings["GENERATE_INFOPLIST_FILE"] = "NO"
   config.build_settings["INFOPLIST_FILE"] = "packaging/macos/Info.plist"
@@ -93,6 +94,7 @@ app_target.add_resources(resource_refs)
 [
   "Info.plist",
   "ExportOptions.plist",
+  "knook.entitlements",
   "create-dmg.sh",
   "generate-app-icons.sh",
   "generate-xcodeproj.rb",
