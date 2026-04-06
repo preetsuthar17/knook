@@ -1,4 +1,5 @@
 import AppKit
+import CoreAudio
 import CoreGraphics
 import Foundation
 
@@ -107,5 +108,60 @@ public final class FullscreenPauseConditionProvider: PauseConditionProvider, @un
     public func isPaused(at date: Date) -> Bool {
         _ = date
         return workspaceContextProvider.snapshot().isFrontmostApplicationFullscreenFocused
+    }
+}
+
+public protocol MicrophoneStateChecking: Sendable {
+    func isMicrophoneActive() -> Bool
+}
+
+public final class MicrophoneActivePauseConditionProvider: PauseConditionProvider, @unchecked Sendable {
+    public let name = "Active Microphone"
+    private let stateChecker: MicrophoneStateChecking
+
+    public init(stateChecker: MicrophoneStateChecking = CoreAudioMicrophoneChecker()) {
+        self.stateChecker = stateChecker
+    }
+
+    public func isPaused(at date: Date) -> Bool {
+        _ = date
+        return stateChecker.isMicrophoneActive()
+    }
+}
+
+public final class CoreAudioMicrophoneChecker: MicrophoneStateChecking, @unchecked Sendable {
+    public init() {}
+
+    public func isMicrophoneActive() -> Bool {
+        var deviceID = AudioDeviceID(0)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        guard AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address, 0, nil, &size, &deviceID
+        ) == noErr, deviceID != kAudioDeviceUnknown else {
+            return false
+        }
+
+        var isRunning: UInt32 = 0
+        var runningSize = UInt32(MemoryLayout<UInt32>.size)
+        var runningAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        guard AudioObjectGetPropertyData(
+            deviceID, &runningAddress, 0, nil, &runningSize, &isRunning
+        ) == noErr else {
+            return false
+        }
+
+        return isRunning != 0
     }
 }

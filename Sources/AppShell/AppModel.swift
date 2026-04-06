@@ -25,6 +25,7 @@ final class AppModel: ObservableObject {
     let launchAtLoginController: LaunchAtLoginController
     private let workspaceContextProvider: any WorkspaceContextProviding
     private let fullscreenPauseProvider: FullscreenPauseConditionProvider
+    private let microphonePauseProvider: MicrophoneActivePauseConditionProvider
     private let updateManager: any UpdateManaging
     private let injectedWindowCoordinator: (any WindowCoordinator)?
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "knook", category: "Timer")
@@ -91,13 +92,15 @@ final class AppModel: ObservableObject {
         self.launchAtLoginController = launchAtLoginController
         self.workspaceContextProvider = workspaceContextProvider
         self.fullscreenPauseProvider = fullscreenPauseProvider
+        self.microphonePauseProvider = MicrophoneActivePauseConditionProvider()
         self.updateManager = updateManager ?? NullUpdateManager()
         self.injectedWindowCoordinator = windowCoordinator
         self.updateState = .idle
 
         scheduler.setPauseProviders(Self.makePauseProviders(
             settings: loadedSettings,
-            fullscreenPauseProvider: fullscreenPauseProvider
+            fullscreenPauseProvider: fullscreenPauseProvider,
+            microphonePauseProvider: microphonePauseProvider
         ))
 
         let now = Date()
@@ -492,15 +495,24 @@ final class AppModel: ObservableObject {
         scheduler.setPauseProviders(
             Self.makePauseProviders(
                 settings: settings,
-                fullscreenPauseProvider: fullscreenPauseProvider
+                fullscreenPauseProvider: fullscreenPauseProvider,
+                microphonePauseProvider: microphonePauseProvider
             )
         )
     }
 
     private static func makePauseProviders(
         settings: AppSettings,
-        fullscreenPauseProvider: FullscreenPauseConditionProvider
+        fullscreenPauseProvider: FullscreenPauseConditionProvider,
+        microphonePauseProvider: MicrophoneActivePauseConditionProvider
     ) -> [any PauseConditionProvider] {
-        settings.smartPauseSettings.pauseDuringFullscreenFocus ? [fullscreenPauseProvider] : []
+        var providers: [any PauseConditionProvider] = []
+        if settings.smartPauseSettings.pauseDuringFullscreenFocus {
+            providers.append(fullscreenPauseProvider)
+        }
+        if settings.smartPauseSettings.pauseDuringMicrophoneActive {
+            providers.append(microphonePauseProvider)
+        }
+        return providers
     }
 }

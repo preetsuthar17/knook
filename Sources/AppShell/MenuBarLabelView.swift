@@ -35,7 +35,7 @@ enum MenuBarLabelFormatter {
         if state.isPaused {
             return MenuBarLabelContent(
                 symbolName: "pause.fill",
-                countdownText: nil,
+                countdownText: state.pauseReason,
                 accessibilityLabel: state.pauseReason ?? "Paused",
                 showsUpdateBadge: showsUpdateBadge
             )
@@ -69,7 +69,7 @@ struct MenuBarLabelView: View {
             showsUpdateBadge: model.updateState.isAvailable
         )
 
-        HStack(spacing: 6) {
+        HStack(spacing: 12) {
             Image(systemName: content.symbolName)
 
             if let countdownText = content.countdownText {

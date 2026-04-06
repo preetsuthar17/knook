@@ -73,4 +73,41 @@ final class WorkspaceContextProviderTests: XCTestCase {
         let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
         XCTAssertFalse(WorkspaceContextProvider.isNearFullscreen(bounds: bounds, within: .zero))
     }
+
+    // MARK: - MicrophoneActivePauseConditionProvider
+
+    private final class MockMicrophoneStateChecker: MicrophoneStateChecking, @unchecked Sendable {
+        var active: Bool
+        init(active: Bool) { self.active = active }
+        func isMicrophoneActive() -> Bool { active }
+    }
+
+    func testMicrophoneProviderReturnsTrueWhenMicIsActive() {
+        let checker = MockMicrophoneStateChecker(active: true)
+        let provider = MicrophoneActivePauseConditionProvider(stateChecker: checker)
+        XCTAssertTrue(provider.isPaused(at: Date()))
+    }
+
+    func testMicrophoneProviderReturnsFalseWhenMicIsInactive() {
+        let checker = MockMicrophoneStateChecker(active: false)
+        let provider = MicrophoneActivePauseConditionProvider(stateChecker: checker)
+        XCTAssertFalse(provider.isPaused(at: Date()))
+    }
+
+    func testMicrophoneProviderReflectsStateChanges() {
+        let checker = MockMicrophoneStateChecker(active: false)
+        let provider = MicrophoneActivePauseConditionProvider(stateChecker: checker)
+        XCTAssertFalse(provider.isPaused(at: Date()))
+        checker.active = true
+        XCTAssertTrue(provider.isPaused(at: Date()))
+    }
+
+    func testSmartPauseSettingsDecodesWithoutMicrophoneKey() throws {
+        let json = """
+        {"pauseDuringFullscreenFocus": true}
+        """.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(SmartPauseSettings.self, from: json)
+        XCTAssertTrue(decoded.pauseDuringFullscreenFocus)
+        XCTAssertFalse(decoded.pauseDuringMicrophoneActive)
+    }
 }

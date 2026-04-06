@@ -160,18 +160,33 @@ public struct ScheduleSettings: Codable, Hashable, Sendable {
 
 public struct SmartPauseSettings: Codable, Hashable, Sendable {
     public var pauseDuringFullscreenFocus: Bool
+    public var pauseDuringMicrophoneActive: Bool
 
-    public init(pauseDuringFullscreenFocus: Bool) {
+    public init(pauseDuringFullscreenFocus: Bool, pauseDuringMicrophoneActive: Bool = true) {
         self.pauseDuringFullscreenFocus = pauseDuringFullscreenFocus
+        self.pauseDuringMicrophoneActive = pauseDuringMicrophoneActive
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.pauseDuringFullscreenFocus = try container.decodeIfPresent(Bool.self, forKey: .pauseDuringFullscreenFocus) ?? false
+        self.pauseDuringMicrophoneActive = try container.decodeIfPresent(Bool.self, forKey: .pauseDuringMicrophoneActive) ?? false
     }
 
     public static let `default` = SmartPauseSettings(
-        pauseDuringFullscreenFocus: true
+        pauseDuringFullscreenFocus: true,
+        pauseDuringMicrophoneActive: true
     )
 
     public static let migratedDefault = SmartPauseSettings(
-        pauseDuringFullscreenFocus: false
+        pauseDuringFullscreenFocus: false,
+        pauseDuringMicrophoneActive: false
     )
+
+    private enum CodingKeys: String, CodingKey {
+        case pauseDuringFullscreenFocus
+        case pauseDuringMicrophoneActive
+    }
 }
 
 public enum WellnessReminderKind: String, Codable, CaseIterable, Sendable, Identifiable {

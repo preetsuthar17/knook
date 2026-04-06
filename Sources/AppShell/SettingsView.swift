@@ -142,8 +142,16 @@ private struct GeneralSettingsPane: View {
                         model.saveSettings()
                     }
                 ))
+
+                Toggle("Pause during calls", isOn: Binding(
+                    get: { model.settings.smartPauseSettings.pauseDuringMicrophoneActive },
+                    set: { newValue in
+                        model.settings.smartPauseSettings.pauseDuringMicrophoneActive = newValue
+                        model.saveSettings()
+                    }
+                ))
             } footer: {
-                Text("Automatically pause break reminders when a fullscreen app is active.")
+                Text("Automatically pause break reminders during fullscreen apps or when your microphone is in use.")
             }
 
             Section {

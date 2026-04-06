@@ -77,7 +77,7 @@ final class MenuBarLabelFormatterTests: XCTestCase {
         let content = MenuBarLabelFormatter.content(launchPhase: .ready, state: state)
 
         XCTAssertEqual(content.symbolName, "pause.fill")
-        XCTAssertNil(content.countdownText)
+        XCTAssertEqual(content.countdownText, "Full-Screen Focus")
     }
 
     func testCarriesUpdateBadgeStateIntoMenuBarContent() {
