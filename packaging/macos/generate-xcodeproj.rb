@@ -14,7 +14,7 @@ end
 
 repo_root = File.expand_path("../..", __dir__)
 project_path = File.join(repo_root, "knook.xcodeproj")
-marketing_version = ENV.fetch("KNOOK_MARKETING_VERSION", "0.2.0")
+marketing_version = ENV.fetch("KNOOK_MARKETING_VERSION", "0.2.1")
 current_project_version = ENV.fetch("KNOOK_CURRENT_PROJECT_VERSION", "1")
 
 FileUtils.rm_rf(project_path)
