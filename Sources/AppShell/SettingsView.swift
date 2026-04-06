@@ -8,6 +8,7 @@ enum AppVersion {
 enum SettingsTab: String, CaseIterable, Identifiable {
     case general = "General"
     case breaks = "Breaks"
+    case schedule = "Schedule"
     case appearance = "Appearance"
     case wellness = "Wellness"
 
@@ -17,6 +18,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: "gearshape.fill"
         case .breaks: "clock.fill"
+        case .schedule: "calendar"
         case .appearance: "paintbrush.fill"
         case .wellness: "heart.fill"
         }
@@ -26,6 +28,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: .blue
         case .breaks: .orange
+        case .schedule: .green
         case .appearance: .purple
         case .wellness: .pink
         }
@@ -94,6 +97,8 @@ struct SettingsView: View {
                     GeneralSettingsPane(model: model)
                 case .breaks:
                     BreaksSettingsPane(model: model)
+                case .schedule:
+                    ScheduleSettingsPane(model: model)
                 case .appearance:
                     AppearanceSettingsPane(model: model)
                 case .wellness:
@@ -379,6 +384,72 @@ private struct AppearanceSettingsPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Appearance")
+    }
+}
+
+private struct ScheduleSettingsPane: View {
+    @ObservedObject var model: AppModel
+
+    private var hasOfficeHours: Bool {
+        !model.settings.scheduleSettings.officeHours.isEmpty
+    }
+
+    private var hasSuggestions: Bool {
+        model.activityLogStore.hasEnoughData()
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                if hasOfficeHours {
+                    ForEach(model.settings.scheduleSettings.officeHours) { rule in
+                        HStack {
+                            Text(weekdayName(rule.weekday))
+                                .frame(width: 50, alignment: .leading)
+                            Text("\(formatTime(rule.startMinutes)) \u{2013} \(formatTime(rule.endMinutes))")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Button("Clear office hours") {
+                        model.clearOfficeHours()
+                    }
+                } else if hasSuggestions {
+                    Text("knook has learned your work pattern.")
+                        .foregroundStyle(.secondary)
+
+                    Button("Apply suggested hours") {
+                        model.applySuggestedOfficeHours()
+                    }
+                } else {
+                    Text("knook is learning when you work. Check back in a few days.")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Office Hours")
+            } footer: {
+                Text("When office hours are set, break reminders only run during those times.")
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private func weekdayName(_ weekday: Int) -> String {
+        let symbols = Calendar.current.shortWeekdaySymbols
+        guard weekday >= 1, weekday <= symbols.count else { return "?" }
+        return symbols[weekday - 1]
+    }
+
+    private func formatTime(_ minutes: Int) -> String {
+        let h = minutes / 60
+        let m = minutes % 60
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        var components = DateComponents()
+        components.hour = h
+        components.minute = m
+        let date = Calendar.current.date(from: components) ?? Date()
+        return formatter.string(from: date)
     }
 }
 

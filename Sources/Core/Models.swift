@@ -669,3 +669,29 @@ public struct BreakStatsData: Codable, Hashable, Sendable {
         return formatter.string(from: date)
     }
 }
+
+// MARK: - Activity Log
+
+public struct WeekdayActivityLog: Codable, Hashable, Sendable {
+    public var weekday: Int
+    public var activeHours: Set<Int>
+    public var sampleCount: Int
+
+    public init(weekday: Int, activeHours: Set<Int> = [], sampleCount: Int = 0) {
+        self.weekday = weekday
+        self.activeHours = activeHours
+        self.sampleCount = sampleCount
+    }
+}
+
+public struct ActivityLogData: Codable, Hashable, Sendable {
+    public var weekdayLogs: [WeekdayActivityLog]
+    public var lastRecordedDate: String?
+
+    public init(weekdayLogs: [WeekdayActivityLog] = [], lastRecordedDate: String? = nil) {
+        self.weekdayLogs = weekdayLogs
+        self.lastRecordedDate = lastRecordedDate
+    }
+
+    public static let empty = ActivityLogData()
+}

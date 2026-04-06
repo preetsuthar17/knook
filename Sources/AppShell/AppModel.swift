@@ -30,6 +30,7 @@ final class AppModel: ObservableObject {
     private let updateManager: any UpdateManaging
     private let injectedWindowCoordinator: (any WindowCoordinator)?
     private let breakStatsStore: BreakStatsStore
+    let activityLogStore: ActivityLogStore
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "knook", category: "Timer")
 
     private var timerCancellable: AnyCancellable?
@@ -99,6 +100,7 @@ final class AppModel: ObservableObject {
         self.injectedWindowCoordinator = windowCoordinator
         self.breakStatsStore = BreakStatsStore()
         self.breakStats = BreakStatsStore().load()
+        self.activityLogStore = ActivityLogStore()
         self.updateState = .idle
 
         scheduler.setPauseProviders(Self.makePauseProviders(
@@ -154,6 +156,11 @@ final class AppModel: ObservableObject {
         lastTickDate = now
 
         let idleSeconds = activityMonitor.idleSeconds
+
+        if idleSeconds < settings.scheduleSettings.idleResetThreshold {
+            activityLogStore.recordActivity(at: now)
+        }
+
         let snapshot = scheduler.advance(to: now, idleSeconds: idleSeconds)
         apply(snapshot: snapshot, now: now, idleSeconds: idleSeconds)
         processWellnessReminders(now: now, idleSeconds: idleSeconds)
@@ -262,6 +269,18 @@ final class AppModel: ObservableObject {
         } catch {
             settingsError = error.localizedDescription
         }
+    }
+
+    func applySuggestedOfficeHours() {
+        let suggested = activityLogStore.suggestedOfficeHours()
+        guard !suggested.isEmpty else { return }
+        settings.scheduleSettings.officeHours = suggested
+        saveSettings()
+    }
+
+    func clearOfficeHours() {
+        settings.scheduleSettings.officeHours = []
+        saveSettings()
     }
 
     func openSettings() {
