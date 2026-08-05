@@ -36,6 +36,8 @@ enum OverlayWindowHelper {
             window.animator().alphaValue = 0
         }
         window.alphaValue = 0
+        // Stop all Core Animation animations so they don't continue running on a window that is about to be reused or torn down.
+        window.contentView?.layer?.removeAllAnimations()
     }
 
     static func presentOverlay<Content: View>(
@@ -74,7 +76,11 @@ enum OverlayWindowHelper {
         }
     }
 
-    static func dismissOverlay(_ window: NSWindow, fadeDuration: TimeInterval = 0.4) {
+    static func dismissOverlay(
+        _ window: NSWindow,
+        fadeDuration: TimeInterval = 0.4,
+        completion: @escaping @MainActor () -> Void = {}
+    ) {
         let generation = dismissGeneration
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = fadeDuration
@@ -84,6 +90,7 @@ enum OverlayWindowHelper {
             Task { @MainActor in
                 guard generation == dismissGeneration else { return }
                 window.orderOut(nil)
+                completion()
             }
         })
     }

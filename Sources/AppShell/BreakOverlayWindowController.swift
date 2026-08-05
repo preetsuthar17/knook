@@ -31,7 +31,11 @@ final class BreakOverlayWindowController {
     func hide() {
         guard let window else { return }
         isDismissing = true
-        OverlayWindowHelper.dismissOverlay(window)
+        OverlayWindowHelper.dismissOverlay(window) { [weak self] in
+            if self?.window === window {
+                self?.window = nil
+            }
+        }
     }
 
     var isVisible: Bool {
