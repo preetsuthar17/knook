@@ -330,6 +330,10 @@ final class AppModel: ObservableObject {
             scheduleNotification(title: breakSession.kind.title, body: breakSession.message)
         }
 
+        if snapshot.breakJustReachedEnd {
+            playSound(for: settings.breakSettings.selectedEndSound)
+        }
+
         if snapshot.breakJustEnded, let kind = snapshot.completedBreakKind {
             breakStats = breakStatsStore.recordBreak(kind: kind, on: now)
         }

@@ -88,6 +88,7 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(loaded.schemaVersion, AppSettings.currentSchemaVersion)
         XCTAssertFalse(loaded.smartPauseSettings.pauseDuringFullscreenFocus)
         XCTAssertFalse(loaded.breakSettings.manualBreakDismissal)
+        XCTAssertEqual(loaded.breakSettings.selectedEndSound, .none)
         XCTAssertFalse(persistedAfterMigration.contains("reminderLeadTime"))
     }
 

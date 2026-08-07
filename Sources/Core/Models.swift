@@ -83,6 +83,7 @@ public struct BreakSettings: Codable, Hashable, Sendable {
     public var skipPolicy: SkipPolicy
     public var customMessages: [String]
     public var selectedSound: BreakSound
+    public var selectedEndSound: BreakSound
     public var backgroundStyle: BreakBackgroundStyle
     public var manualBreakDismissal: Bool
 
@@ -96,6 +97,7 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         skipPolicy: SkipPolicy,
         customMessages: [String],
         selectedSound: BreakSound,
+        selectedEndSound: BreakSound = .none,
         backgroundStyle: BreakBackgroundStyle,
         manualBreakDismissal: Bool = false
     ) {
@@ -108,6 +110,7 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         self.skipPolicy = skipPolicy
         self.customMessages = customMessages
         self.selectedSound = selectedSound
+        self.selectedEndSound = selectedEndSound
         self.backgroundStyle = backgroundStyle
         self.manualBreakDismissal = manualBreakDismissal
     }
@@ -139,6 +142,7 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         case skipPolicy
         case customMessages
         case selectedSound
+        case selectedEndSound
         case backgroundStyle
         case manualBreakDismissal
     }
@@ -154,6 +158,7 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         self.skipPolicy = try container.decode(SkipPolicy.self, forKey: .skipPolicy)
         self.customMessages = try container.decode([String].self, forKey: .customMessages)
         self.selectedSound = try container.decode(BreakSound.self, forKey: .selectedSound)
+        self.selectedEndSound = try container.decodeIfPresent(BreakSound.self, forKey: .selectedEndSound) ?? .none
         self.backgroundStyle = try container.decode(BreakBackgroundStyle.self, forKey: .backgroundStyle)
         self.manualBreakDismissal = try container.decodeIfPresent(Bool.self, forKey: .manualBreakDismissal) ?? false
     }

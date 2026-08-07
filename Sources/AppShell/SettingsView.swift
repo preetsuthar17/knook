@@ -357,8 +357,21 @@ private struct AppearanceSettingsPane: View {
                         Text(sound.rawValue.capitalized).tag(sound)
                     }
                 }
+
+                Picker("End of break sound", selection: Binding(
+                    get: { model.settings.breakSettings.selectedEndSound },
+                    set: { newValue in
+                        model.settings.breakSettings.selectedEndSound = newValue
+                        model.saveSettings()
+                        Self.previewSound(newValue)
+                    }
+                )) {
+                    ForEach(BreakSound.allCases) { sound in
+                        Text(sound.rawValue.capitalized).tag(sound)
+                    }
+                }
             } footer: {
-                Text("Sound played when a break starts.")
+                Text("Sound played when a break starts, and when a break ends.")
             }
 
             Section {

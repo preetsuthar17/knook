@@ -148,6 +148,81 @@ final class BreakSchedulerTests: XCTestCase {
         XCTAssertEqual(afterEnd.state.nextBreakDate, start.addingTimeInterval(130))
     }
 
+    func testBreakJustReachedEndFiresOnceWhenBreakCompletesAutomatically() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = false
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        let afterEnd = scheduler.advance(to: start.addingTimeInterval(70), idleSeconds: 0)
+        let nextTick = scheduler.advance(to: start.addingTimeInterval(80), idleSeconds: 0)
+
+        XCTAssertTrue(afterEnd.breakJustReachedEnd)
+        XCTAssertFalse(nextTick.breakJustReachedEnd)
+    }
+
+    func testBreakJustReachedEndFiresOnceWhileHeldForManualDismissal() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = true
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        let reachedEnd = scheduler.advance(to: start.addingTimeInterval(70), idleSeconds: 0)
+        let stillHeld = scheduler.advance(to: start.addingTimeInterval(80), idleSeconds: 0)
+        let dismissed = scheduler.dismissBreak(at: start.addingTimeInterval(90))
+
+        XCTAssertTrue(reachedEnd.breakJustReachedEnd)
+        XCTAssertFalse(reachedEnd.breakJustEnded)
+        XCTAssertNotNil(reachedEnd.state.activeBreak)
+        XCTAssertFalse(stillHeld.breakJustReachedEnd)
+        XCTAssertTrue(stillHeld.state.breakNeedsDismissal)
+        XCTAssertTrue(dismissed.breakJustEnded)
+        XCTAssertFalse(dismissed.breakJustReachedEnd)
+    }
+
+    func testEndBreakEarlyDoesNotEmitReachedEndSignal() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = true
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        let endedEarly = scheduler.endBreakEarly(at: start.addingTimeInterval(65))
+
+        XCTAssertTrue(endedEarly.breakJustEnded)
+        XCTAssertFalse(endedEarly.breakJustReachedEnd)
+    }
+
+    func testBreakJustReachedEndResetsForNextBreak() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = true
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(70), idleSeconds: 0)
+        _ = scheduler.dismissBreak(at: start.addingTimeInterval(80))
+
+        _ = scheduler.advance(to: start.addingTimeInterval(140), idleSeconds: 0)
+        let secondBreakEnded = scheduler.advance(to: start.addingTimeInterval(150), idleSeconds: 0)
+
+        XCTAssertTrue(secondBreakEnded.breakJustReachedEnd)
+    }
+
     @MainActor
     func testSmartPauseSuppressesBreakWhileProviderIsActive() {
         var settings = AppSettings.default
