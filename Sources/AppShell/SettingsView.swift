@@ -280,6 +280,18 @@ private struct BreaksSettingsPane: View {
             }
 
             Section {
+                Toggle("Keep overlay open until dismissed", isOn: Binding(
+                    get: { model.settings.breakSettings.manualBreakDismissal },
+                    set: { newValue in
+                        model.settings.breakSettings.manualBreakDismissal = newValue
+                        model.saveSettings()
+                    }
+                ))
+            } footer: {
+                Text("When enabled, the break overlay stays on screen after the break ends until you click Dismiss. The next work interval won't start until then.")
+            }
+
+            Section {
                 Toggle("Long breaks", isOn: Binding(
                     get: { model.settings.breakSettings.longBreaksEnabled },
                     set: { newValue in

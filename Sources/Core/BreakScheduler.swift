@@ -113,6 +113,10 @@ public final class BreakScheduler: @unchecked Sendable {
 
         if let breakSession = activeBreak {
             if now >= breakSession.scheduledEnd {
+                if settings.breakSettings.manualBreakDismissal {
+                    statusText = "Break complete \u{2014} dismiss to continue"
+                    return snapshot(now: now, breakJustStarted: false, breakJustEnded: false)
+                }
                 let kind = breakSession.kind
                 completeActiveBreak(at: now)
                 return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
@@ -191,6 +195,17 @@ public final class BreakScheduler: @unchecked Sendable {
         let kind = breakSession.kind
         completeActiveBreak(at: now)
         statusText = "Break ended early"
+        return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
+    }
+
+    public func dismissBreak(at now: Date) -> Snapshot {
+        guard let breakSession = activeBreak else {
+            return snapshot(now: now, breakJustStarted: false, breakJustEnded: false)
+        }
+
+        let kind = breakSession.kind
+        completeActiveBreak(at: now)
+        statusText = "Break dismissed"
         return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
     }
 
@@ -304,7 +319,8 @@ public final class BreakScheduler: @unchecked Sendable {
                 activeBreak: activeBreak,
                 isPaused: isPaused,
                 pauseReason: pauseReason,
-                statusText: statusText
+                statusText: statusText,
+                breakNeedsDismissal: settings.breakSettings.manualBreakDismissal && activeBreak.map { now >= $0.scheduledEnd } == true
             ),
             breakJustStarted: breakJustStarted,
             breakJustEnded: breakJustEnded,

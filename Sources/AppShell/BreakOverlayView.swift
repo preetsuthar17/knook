@@ -10,6 +10,10 @@ struct BreakOverlayView: View {
         model.appState.countdownText ?? "00:00"
     }
 
+    private var isOver: Bool {
+        model.appState.breakNeedsDismissal && model.appState.activeBreak?.id == session.id
+    }
+
     var body: some View {
         ZStack {
             BreakBackgroundView(style: session.backgroundStyle)
@@ -26,23 +30,30 @@ struct BreakOverlayView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: 600)
 
-                Text("Break ends in \(remainingText)")
+                Text(isOver ? "Break is over" : "Break ends in \(remainingText)")
                     .font(.system(size: 17, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(.white.opacity(0.6))
 
                 HStack(spacing: 14) {
-                    if model.settings.breakSettings.allowEarlyEnd {
-                        Button("End Early") {
-                            model.endBreakEarly()
+                    if isOver {
+                        Button("Dismiss") {
+                            model.dismissBreak()
                         }
                         .buttonStyle(OverlayButtonStyle(filled: true))
-                    }
+                    } else {
+                        if model.settings.breakSettings.allowEarlyEnd {
+                            Button("End Early") {
+                                model.endBreakEarly()
+                            }
+                            .buttonStyle(OverlayButtonStyle(filled: true))
+                        }
 
-                    Button("Skip") {
-                        model.skipCurrentBreak()
+                        Button("Skip") {
+                            model.skipCurrentBreak()
+                        }
+                        .buttonStyle(OverlayButtonStyle(filled: false))
                     }
-                    .buttonStyle(OverlayButtonStyle(filled: false))
                 }
                 .padding(.top, 8)
             }

@@ -104,6 +104,50 @@ final class BreakSchedulerTests: XCTestCase {
         XCTAssertEqual(snapshot.state.statusText, "Outside office hours")
     }
 
+    func testManualDismissalHoldsBreakOverlayAfterBreakEnds() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = true
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        let started = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        XCTAssertTrue(started.breakJustStarted)
+
+        let afterEnd = scheduler.advance(to: start.addingTimeInterval(70), idleSeconds: 0)
+        XCTAssertFalse(afterEnd.breakJustEnded)
+        XCTAssertNotNil(afterEnd.state.activeBreak)
+        XCTAssertTrue(afterEnd.state.breakNeedsDismissal)
+        XCTAssertNil(afterEnd.state.nextBreakDate)
+
+        let dismissed = scheduler.dismissBreak(at: start.addingTimeInterval(80))
+        XCTAssertTrue(dismissed.breakJustEnded)
+        XCTAssertEqual(dismissed.completedBreakKind, .micro)
+        XCTAssertNil(dismissed.state.activeBreak)
+        XCTAssertFalse(dismissed.state.breakNeedsDismissal)
+        XCTAssertEqual(dismissed.state.nextBreakDate, start.addingTimeInterval(140))
+    }
+
+    func testManualDismissalDisabledStillEndsBreakAutomatically() {
+        var settings = AppSettings.default
+        settings.breakSettings.workInterval = 60
+        settings.breakSettings.microBreakDuration = 10
+        settings.breakSettings.manualBreakDismissal = false
+        let scheduler = BreakScheduler(settings: settings)
+        let start = Date(timeIntervalSinceReferenceDate: 1000)
+
+        _ = scheduler.advance(to: start, idleSeconds: 0)
+        _ = scheduler.advance(to: start.addingTimeInterval(60), idleSeconds: 0)
+        let afterEnd = scheduler.advance(to: start.addingTimeInterval(70), idleSeconds: 0)
+
+        XCTAssertTrue(afterEnd.breakJustEnded)
+        XCTAssertNil(afterEnd.state.activeBreak)
+        XCTAssertFalse(afterEnd.state.breakNeedsDismissal)
+        XCTAssertEqual(afterEnd.state.nextBreakDate, start.addingTimeInterval(130))
+    }
+
     @MainActor
     func testSmartPauseSuppressesBreakWhileProviderIsActive() {
         var settings = AppSettings.default

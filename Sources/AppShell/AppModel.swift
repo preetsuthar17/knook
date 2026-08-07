@@ -247,6 +247,13 @@ final class AppModel: ObservableObject {
         apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
+    func dismissBreak() {
+        guard launchPhase == .ready else { return }
+        let now = Date()
+        let snapshot = scheduler.dismissBreak(at: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
+    }
+
     func saveSettings() {
         do {
             try settingsStore.save(settings)
