@@ -280,6 +280,18 @@ private struct BreaksSettingsPane: View {
             }
 
             Section {
+                Toggle("Keep overlay open until dismissed", isOn: Binding(
+                    get: { model.settings.breakSettings.manualBreakDismissal },
+                    set: { newValue in
+                        model.settings.breakSettings.manualBreakDismissal = newValue
+                        model.saveSettings()
+                    }
+                ))
+            } footer: {
+                Text("When enabled, the break overlay stays on screen after the break ends until you click Dismiss. The next work interval won't start until then.")
+            }
+
+            Section {
                 Toggle("Long breaks", isOn: Binding(
                     get: { model.settings.breakSettings.longBreaksEnabled },
                     set: { newValue in
@@ -345,8 +357,21 @@ private struct AppearanceSettingsPane: View {
                         Text(sound.rawValue.capitalized).tag(sound)
                     }
                 }
+
+                Picker("End of break sound", selection: Binding(
+                    get: { model.settings.breakSettings.selectedEndSound },
+                    set: { newValue in
+                        model.settings.breakSettings.selectedEndSound = newValue
+                        model.saveSettings()
+                        Self.previewSound(newValue)
+                    }
+                )) {
+                    ForEach(BreakSound.allCases) { sound in
+                        Text(sound.rawValue.capitalized).tag(sound)
+                    }
+                }
             } footer: {
-                Text("Sound played when a break starts.")
+                Text("Sound played when a break starts, and when a break ends.")
             }
 
             Section {

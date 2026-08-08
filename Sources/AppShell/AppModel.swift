@@ -247,6 +247,13 @@ final class AppModel: ObservableObject {
         apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
     }
 
+    func dismissBreak() {
+        guard launchPhase == .ready else { return }
+        let now = Date()
+        let snapshot = scheduler.dismissBreak(at: now)
+        apply(snapshot: snapshot, now: now, idleSeconds: activityMonitor.idleSeconds)
+    }
+
     func saveSettings() {
         do {
             try settingsStore.save(settings)
@@ -321,6 +328,10 @@ final class AppModel: ObservableObject {
             playSound(for: settings.breakSettings.selectedSound)
             pendingWellnessEvent = nil
             scheduleNotification(title: breakSession.kind.title, body: breakSession.message)
+        }
+
+        if snapshot.breakJustReachedEnd {
+            playSound(for: settings.breakSettings.selectedEndSound)
         }
 
         if snapshot.breakJustEnded, let kind = snapshot.completedBreakKind {

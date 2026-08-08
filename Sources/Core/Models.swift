@@ -83,7 +83,9 @@ public struct BreakSettings: Codable, Hashable, Sendable {
     public var skipPolicy: SkipPolicy
     public var customMessages: [String]
     public var selectedSound: BreakSound
+    public var selectedEndSound: BreakSound
     public var backgroundStyle: BreakBackgroundStyle
+    public var manualBreakDismissal: Bool
 
     public init(
         workInterval: TimeInterval,
@@ -95,7 +97,9 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         skipPolicy: SkipPolicy,
         customMessages: [String],
         selectedSound: BreakSound,
-        backgroundStyle: BreakBackgroundStyle
+        selectedEndSound: BreakSound = .none,
+        backgroundStyle: BreakBackgroundStyle,
+        manualBreakDismissal: Bool = false
     ) {
         self.workInterval = workInterval
         self.microBreakDuration = microBreakDuration
@@ -106,7 +110,9 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         self.skipPolicy = skipPolicy
         self.customMessages = customMessages
         self.selectedSound = selectedSound
+        self.selectedEndSound = selectedEndSound
         self.backgroundStyle = backgroundStyle
+        self.manualBreakDismissal = manualBreakDismissal
     }
 
     public static let `default` = BreakSettings(
@@ -125,6 +131,37 @@ public struct BreakSettings: Codable, Hashable, Sendable {
         selectedSound: .breeze,
         backgroundStyle: .dawn
     )
+
+    private enum CodingKeys: String, CodingKey {
+        case workInterval
+        case microBreakDuration
+        case longBreakDuration
+        case longBreakCadence
+        case longBreaksEnabled
+        case allowEarlyEnd
+        case skipPolicy
+        case customMessages
+        case selectedSound
+        case selectedEndSound
+        case backgroundStyle
+        case manualBreakDismissal
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.workInterval = try container.decode(TimeInterval.self, forKey: .workInterval)
+        self.microBreakDuration = try container.decode(TimeInterval.self, forKey: .microBreakDuration)
+        self.longBreakDuration = try container.decode(TimeInterval.self, forKey: .longBreakDuration)
+        self.longBreakCadence = try container.decode(Int.self, forKey: .longBreakCadence)
+        self.longBreaksEnabled = try container.decode(Bool.self, forKey: .longBreaksEnabled)
+        self.allowEarlyEnd = try container.decode(Bool.self, forKey: .allowEarlyEnd)
+        self.skipPolicy = try container.decode(SkipPolicy.self, forKey: .skipPolicy)
+        self.customMessages = try container.decode([String].self, forKey: .customMessages)
+        self.selectedSound = try container.decode(BreakSound.self, forKey: .selectedSound)
+        self.selectedEndSound = try container.decodeIfPresent(BreakSound.self, forKey: .selectedEndSound) ?? .none
+        self.backgroundStyle = try container.decode(BreakBackgroundStyle.self, forKey: .backgroundStyle)
+        self.manualBreakDismissal = try container.decodeIfPresent(Bool.self, forKey: .manualBreakDismissal) ?? false
+    }
 }
 
 public struct ScheduleSettings: Codable, Hashable, Sendable {
@@ -590,6 +627,7 @@ public struct AppState: Sendable {
     public var isPaused: Bool
     public var pauseReason: String?
     public var statusText: String
+    public var breakNeedsDismissal: Bool
 
     public init(
         now: Date,
@@ -597,7 +635,8 @@ public struct AppState: Sendable {
         activeBreak: BreakSession?,
         isPaused: Bool,
         pauseReason: String?,
-        statusText: String
+        statusText: String,
+        breakNeedsDismissal: Bool = false
     ) {
         self.now = now
         self.nextBreakDate = nextBreakDate
@@ -605,6 +644,7 @@ public struct AppState: Sendable {
         self.isPaused = isPaused
         self.pauseReason = pauseReason
         self.statusText = statusText
+        self.breakNeedsDismissal = breakNeedsDismissal
     }
 }
 

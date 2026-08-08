@@ -8,7 +8,7 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private let updateManager: any UpdateManaging
     private var statusItem: NSStatusItem!
-    private var popover: NSPopover!
+    private var popover: NSPopover?
     private var cancellables = Set<AnyCancellable>()
     private var eventMonitor: Any?
     private var lastCloseDate: Date = .distantPast
@@ -40,17 +40,6 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
             button.sendAction(on: [.leftMouseUp])
         }
 
-        let pop = NSPopover()
-        pop.behavior = .applicationDefined
-        pop.animates = false
-        pop.contentViewController = NSHostingController(
-            rootView: PopoverContentView(
-                model: model,
-                dismiss: { [weak self] in self?.closePopover() }
-            )
-        )
-        popover = pop
-
         model.$appState
             .combineLatest(model.$launchPhase, model.$updateState)
             .sink { [weak self] appState, launchPhase, updateState in
@@ -71,14 +60,31 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
 
         if Date().timeIntervalSince(lastCloseDate) < 0.25 { return }
 
-        if popover.isShown {
+        if popover?.isShown ?? false {
             closePopover()
         } else {
             openPopover(relativeTo: button)
         }
     }
 
+    private func makePopover() -> NSPopover {
+        let pop = NSPopover()
+        pop.behavior = .applicationDefined
+        pop.animates = false
+        pop.contentViewController = NSHostingController(
+            rootView: PopoverContentView(
+                model: model,
+                dismiss: { [weak self] in self?.closePopover() }
+            )
+        )
+        return pop
+    }
+
     private func openPopover(relativeTo button: NSStatusBarButton) {
+        if popover == nil {
+            popover = makePopover()
+        }
+        guard let popover else { return }
         NSApp.activate(ignoringOtherApps: true)
         let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         popover.contentViewController?.view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
@@ -88,10 +94,11 @@ final class ApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func closePopover() {
-        guard popover.isShown else { return }
+        guard let popover, popover.isShown else { return }
         popover.performClose(nil)
         lastCloseDate = Date()
         removeEventMonitor()
+        self.popover = nil
     }
 
     private func installEventMonitor() {

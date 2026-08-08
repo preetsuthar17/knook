@@ -10,12 +10,20 @@ public final class BreakScheduler: @unchecked Sendable {
         public var state: AppState
         public var breakJustStarted: Bool
         public var breakJustEnded: Bool
+        public var breakJustReachedEnd: Bool
         public var completedBreakKind: BreakKind?
 
-        public init(state: AppState, breakJustStarted: Bool, breakJustEnded: Bool, completedBreakKind: BreakKind? = nil) {
+        public init(
+            state: AppState,
+            breakJustStarted: Bool,
+            breakJustEnded: Bool,
+            completedBreakKind: BreakKind? = nil,
+            breakJustReachedEnd: Bool = false
+        ) {
             self.state = state
             self.breakJustStarted = breakJustStarted
             self.breakJustEnded = breakJustEnded
+            self.breakJustReachedEnd = breakJustReachedEnd
             self.completedBreakKind = completedBreakKind
         }
     }
@@ -41,6 +49,7 @@ public final class BreakScheduler: @unchecked Sendable {
     private var manualPauseRemainingUntilBreak: TimeInterval?
     private var statusText = "Preparing your first session"
     private let smartPauseResumeGracePeriod: TimeInterval = 2 * 60
+    private var hasAnnouncedBreakEnd = false
 
     public init(
         settings: AppSettings = .default,
@@ -113,9 +122,17 @@ public final class BreakScheduler: @unchecked Sendable {
 
         if let breakSession = activeBreak {
             if now >= breakSession.scheduledEnd {
+                let reachedEnd = !hasAnnouncedBreakEnd
+                if reachedEnd {
+                    hasAnnouncedBreakEnd = true
+                }
+                if settings.breakSettings.manualBreakDismissal {
+                    statusText = "Break complete \u{2014} dismiss to continue"
+                    return snapshot(now: now, breakJustStarted: false, breakJustEnded: false, breakJustReachedEnd: reachedEnd)
+                }
                 let kind = breakSession.kind
                 completeActiveBreak(at: now)
-                return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
+                return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, breakJustReachedEnd: reachedEnd, completedBreakKind: kind)
             }
 
             let remaining = breakSession.scheduledEnd.timeIntervalSince(now)
@@ -194,6 +211,17 @@ public final class BreakScheduler: @unchecked Sendable {
         return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
     }
 
+    public func dismissBreak(at now: Date) -> Snapshot {
+        guard let breakSession = activeBreak else {
+            return snapshot(now: now, breakJustStarted: false, breakJustEnded: false)
+        }
+
+        let kind = breakSession.kind
+        completeActiveBreak(at: now)
+        statusText = "Break dismissed"
+        return snapshot(now: now, breakJustStarted: false, breakJustEnded: true, completedBreakKind: kind)
+    }
+
     public func pause(reason: String = "Manual Pause", now: Date) -> Snapshot {
         automaticPauseState = nil
         isPaused = true
@@ -259,6 +287,7 @@ public final class BreakScheduler: @unchecked Sendable {
         )
         postponedUntil = nil
         nextBreakDate = nil
+        hasAnnouncedBreakEnd = false
         statusText = "\(kind.title) started"
     }
 
@@ -291,6 +320,7 @@ public final class BreakScheduler: @unchecked Sendable {
         now: Date,
         breakJustStarted: Bool,
         breakJustEnded: Bool,
+        breakJustReachedEnd: Bool = false,
         completedBreakKind: BreakKind? = nil
     ) -> Snapshot {
         let displayedNextBreakDate = automaticPauseState?.remainingUntilBreak.map {
@@ -304,11 +334,13 @@ public final class BreakScheduler: @unchecked Sendable {
                 activeBreak: activeBreak,
                 isPaused: isPaused,
                 pauseReason: pauseReason,
-                statusText: statusText
+                statusText: statusText,
+                breakNeedsDismissal: settings.breakSettings.manualBreakDismissal && activeBreak.map { now >= $0.scheduledEnd } == true
             ),
             breakJustStarted: breakJustStarted,
             breakJustEnded: breakJustEnded,
-            completedBreakKind: completedBreakKind
+            completedBreakKind: completedBreakKind,
+            breakJustReachedEnd: breakJustReachedEnd
         )
     }
 
